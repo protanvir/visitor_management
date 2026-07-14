@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { prisma } from "../index";
 import { z } from "zod";
+import { parse } from "csv-parse/sync";
 
 const router = Router();
 
@@ -431,6 +432,141 @@ router.post("/bulk-approve", async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error bulk approving visits:", error);
     res.status(500).json({ success: false, error: "Failed to bulk approve visits" });
+  }
+});
+
+// Download CSV template for bulk import
+router.get("/import/template", async (req: Request, res: Response) => {
+  const csv = `name,email,designation,department,role,phone,siteId
+John Smith,john.smith@company.com,Manager,Engineering,employee,+8801712345678,
+Jane Doe,jane.doe@company.com,Developer,IT,employee,+8801812345678,
+Ahmed Rahman,ahmed@company.com,Director,Management,admin,+8801912345678,`;
+
+  res.setHeader("Content-Type", "text/csv");
+  res.setHeader("Content-Disposition", 'attachment; filename="employee_import_template.csv"');
+  res.send(csv);
+});
+
+// Bulk import employees from CSV
+router.post("/import", async (req: Request, res: Response) => {
+  try {
+    const { csvData, organizationId, defaultSiteId } = req.body;
+
+    if (!csvData || !organizationId) {
+      return res.status(400).json({
+        success: false,
+        error: "csvData and organizationId are required",
+      });
+    }
+
+    // Parse CSV
+    let records: any[];
+    try {
+      records = parse(csvData, {
+        columns: true,
+        skip_empty_lines: true,
+        trim: true,
+      });
+    } catch (err) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid CSV format. Please check the file structure.",
+      });
+    }
+
+    if (records.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: "CSV file is empty",
+      });
+    }
+
+    const results = {
+      total: records.length,
+      imported: 0,
+      skipped: 0,
+      errors: [] as { row: number; email: string; error: string }[],
+    };
+
+    for (let i = 0; i < records.length; i++) {
+      const row = records[i];
+      const rowNumber = i + 2; // +2 because row 1 is header, and 1-indexed
+
+      // Validate required fields
+      if (!row.name || !row.email) {
+        results.errors.push({
+          row: rowNumber,
+          email: row.email || "N/A",
+          error: "Missing required fields (name, email)",
+        });
+        results.skipped++;
+        continue;
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(row.email)) {
+        results.errors.push({
+          row: rowNumber,
+          email: row.email,
+          error: "Invalid email format",
+        });
+        results.skipped++;
+        continue;
+      }
+
+      // Check for existing employee with same email
+      const existing = await prisma.employee.findUnique({
+        where: { email: row.email },
+      });
+
+      if (existing) {
+        results.errors.push({
+          row: rowNumber,
+          email: row.email,
+          error: "Employee with this email already exists",
+        });
+        results.skipped++;
+        continue;
+      }
+
+      // Validate role
+      const validRoles = ["admin", "receptionist", "security", "employee"];
+      const role = validRoles.includes(row.role) ? row.role : "employee";
+
+      // Create employee
+      try {
+        await prisma.employee.create({
+          data: {
+            name: row.name,
+            email: row.email,
+            designation: row.designation || null,
+            department: row.department || null,
+            role,
+            phone: row.phone || null,
+            siteId: row.siteId || defaultSiteId || null,
+            organizationId,
+          },
+        });
+        results.imported++;
+      } catch (err) {
+        results.errors.push({
+          row: rowNumber,
+          email: row.email,
+          error: "Failed to create employee",
+        });
+        results.skipped++;
+      }
+    }
+
+    res.json({
+      success: true,
+      data: results,
+      message: `Import complete: ${results.imported} imported, ${results.skipped} skipped`,
+    });
+  } catch (error) {
+    console.error("Error importing employees:", error);
+    res.status(500).json({ success: false, error: "Failed to import employees" });
   }
 });
 
