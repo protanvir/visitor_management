@@ -1,0 +1,187 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Organization model
+model Organization {
+  id         String       @id @default(uuid())
+  name       String
+  settings   Json?
+  sites      Site[]
+  employees  Employee[]
+  users      User[]
+  watchlists Watchlist[]
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+}
+
+// User model (for authentication)
+model User {
+  id             String       @id @default(uuid())
+  email          String       @unique
+  name           String
+  password       String       // Hashed password
+  role           String       @default("user") // admin, manager, user
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  employeeId     String?      @unique
+  employee       Employee?    @relation(fields: [employeeId], references: [id])
+  lastLogin      DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+// Site model (for multi-site support)
+model Site {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  name           String
+  address        String?
+  timezone       String       @default("UTC")
+  settings       Json?
+  employees      Employee[]
+  visits         Visit[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+// Employee/Host model
+model Employee {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  siteId         String?
+  site           Site?        @relation(fields: [siteId], references: [id])
+  email          String       @unique
+  name           String
+  department     String?
+  role           String       @default("employee")
+  phone          String?
+  user           User?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  hostedVisits   Visit[]      @relation("HostedVisits")
+}
+
+// Visitor model
+model Visitor {
+  id        String   @id @default(uuid())
+  email     String?
+  name      String
+  phone     String?
+  company   String?
+  photoUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  visits    Visit[]
+
+  @@unique([email, name])
+}
+
+// Visit model (core tracking)
+model Visit {
+  id              String             @id @default(uuid())
+  visitorId       String
+  visitor         Visitor            @relation(fields: [visitorId], references: [id])
+  hostId          String
+  host            Employee           @relation("HostedVisits", fields: [hostId], references: [id])
+  siteId          String
+  site            Site               @relation(fields: [siteId], references: [id])
+  purpose         String?
+  visitorType     String             @default("guest") // guest, contractor, vendor, delivery, interview
+  checkInTime     DateTime?
+  checkOutTime    DateTime?
+  expectedArrival DateTime?
+  expectedDeparture DateTime?
+  status          String             @default("pending") // pending, approved, checked_in, checked_out, cancelled
+  ndaSigned       Boolean            @default(false)
+  safetyBriefing  Boolean            @default(false)
+  badge           Badge?
+  notifications   Notification[]
+  safetyChecklist SafetyChecklist?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@index([status])
+  @@index([checkInTime])
+  @@index([checkOutTime])
+  @@index([visitorId])
+  @@index([hostId])
+  @@index([siteId])
+  @@index([createdAt])
+  @@index([visitorType])
+  @@index([status, createdAt]) // Composite index for common queries
+  @@index([siteId, status]) // Composite index for site-specific queries
+}
+
+// Badge model (digital badges)
+model Badge {
+  id           String    @id @default(uuid())
+  visitId      String    @unique
+  visit        Visit     @relation(fields: [visitId], references: [id])
+  qrCode       String
+  expiresAt    DateTime
+  returnedAt   DateTime?
+  returnedBy   String?
+  returnNotes  String?
+  createdAt    DateTime  @default(now())
+
+  @@index([expiresAt])
+  @@index([returnedAt])
+}
+
+// Notification model
+model Notification {
+  id        String   @id @default(uuid())
+  visitId   String
+  visit     Visit    @relation(fields: [visitId], references: [id])
+  type      String   // email, sms
+  recipient String
+  subject   String?
+  message   String
+  status    String   @default("pending") // pending, sent, failed
+  sentAt    DateTime?
+  error     String?
+  createdAt DateTime @default(now())
+
+  @@index([visitId])
+  @@index([type])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// Watchlist model (for blocking individuals)
+model Watchlist {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  email          String?
+  name           String?
+  phone          String?
+  reason         String
+  active         Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([organizationId, email, name])
+}
+
+// Safety checklist model (for factory environments)
+model SafetyChecklist {
+  id        String   @id @default(uuid())
+  visitId   String   @unique
+  visit     Visit    @relation(fields: [visitId], references: [id])
+  items     Json     // Array of checklist items with completion status
+  completed Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
