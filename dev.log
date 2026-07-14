@@ -1,0 +1,153 @@
+
+> visitor-management-system@1.0.0 dev
+> turbo dev
+
+• turbo 2.10.5
+
+   • Packages in scope: @vms/api, @vms/shared, @vms/web
+   • Running dev in 3 packages
+   • Remote caching disabled
+
+@vms/web:dev: cache bypass, force executing d8198a4361e7708b
+@vms/api:dev: cache bypass, force executing 779ceb8bd86bfa6d
+@vms/web:dev: 
+@vms/web:dev: > @vms/web@1.0.0 dev
+@vms/web:dev: > next dev
+@vms/web:dev: 
+@vms/api:dev: 
+@vms/api:dev: > @vms/api@1.0.0 dev
+@vms/api:dev: > tsx watch src/index.ts
+@vms/api:dev: 
+@vms/api:dev: 
+@vms/api:dev: ╔═══════════════════════════════════════════════════════════╗
+@vms/api:dev: ║           Aptech Group - Visitor Management System        ║
+@vms/api:dev: ║                      API Server Started                   ║
+@vms/api:dev: ╠═══════════════════════════════════════════════════════════╣
+@vms/api:dev: ║  Port: 3001                                              ║
+@vms/api:dev: ║  Environment: development                               ║
+@vms/api:dev: ║  Health Check: http://localhost:3001/health                 ║
+@vms/api:dev: ╚═══════════════════════════════════════════════════════════╝
+@vms/api:dev:   
+@vms/web:dev:   ▲ Next.js 14.2.35
+@vms/web:dev:   - Local:        http://localhost:3000
+@vms/web:dev:   - Environments: .env
+@vms/web:dev: 
+@vms/web:dev:  ✓ Starting...
+@vms/web:dev:  ✓ Ready in 1729ms
+@vms/web:dev:  ○ Compiling / ...
+@vms/web:dev:  ✓ Compiled / in 3.1s (468 modules)
+@vms/web:dev:  ✓ Compiled in 479ms (237 modules)
+@vms/web:dev:  GET / 200 in 3621ms
+@vms/web:dev:  ○ Compiling /_not-found ...
+@vms/web:dev:  ✓ Compiled /_not-found in 586ms (448 modules)
+@vms/web:dev:  GET /service-worker.js?v=1.0.11&t=1755327253480 404 in 675ms
+@vms/web:dev:  ✓ Compiled /dashboard in 171ms (458 modules)
+@vms/web:dev:  GET /dashboard 200 in 260ms
+@vms/api:dev: [INFO] GET /dashboard 304 136ms
+@vms/api:dev: [INFO] GET /dashboard 304 11ms
+@vms/web:dev:  GET /service-worker.js?v=1.0.11&t=1755327253480 404 in 61ms
+@vms/web:dev:  ✓ Compiled /visitors in 270ms (461 modules)
+@vms/web:dev:  GET /visitors 200 in 389ms
+@vms/api:dev: [INFO] GET / 304 17ms
+@vms/api:dev: [INFO] GET / 304 4ms
+@vms/web:dev:  ✓ Compiled /_not-found in 144ms (464 modules)
+@vms/web:dev:  GET /service-worker.js?v=1.0.11&t=1755327253480 404 in 204ms
+@vms/web:dev:  GET /dashboard 200 in 72ms
+@vms/web:dev:  ✓ Compiled /reports in 164ms (470 modules)
+@vms/web:dev:  GET /reports 200 in 202ms
+@vms/api:dev: [INFO] GET / 200 9ms
+@vms/api:dev: [INFO] GET / 304 4ms
+@vms/api:dev: [INFO] GET /dashboard 304 11ms
+@vms/api:dev: [INFO] GET /dashboard 304 8ms
+@vms/api:dev: [INFO] GET / 200 14ms
+@vms/api:dev: [INFO] GET / 304 8ms
+@vms/web:dev:  GET /service-worker.js?v=1.0.11&t=1755327253480 404 in 22ms
+@vms/web:dev:  GET /service-worker.js?v=1.0.11&t=1755327253480 404 in 28ms
+@vms/web:dev:  ✓ Compiled /areas in 168ms (476 modules)
+@vms/web:dev:  GET /areas 200 in 205ms
+@vms/api:dev: [INFO] GET / 200 1ms
+@vms/api:dev: [INFO] GET / 304 1ms
+@vms/web:dev:  GET /service-worker.js?v=1.0.11&t=1755327253480 404 in 46ms
+@vms/web:dev:  GET /dashboard 200 in 58ms
+@vms/api:dev: [INFO] GET /dashboard 304 7ms
+@vms/api:dev: [INFO] GET /dashboard 304 6ms
+@vms/web:dev:  GET /service-worker.js?v=1.0.11&t=1755327253480 404 in 32ms
+@vms/web:dev:  GET /visitors 200 in 48ms
+@vms/api:dev: [INFO] GET / 304 4ms
+@vms/api:dev: [INFO] GET / 304 2ms
+@vms/web:dev:  GET /service-worker.js?v=1.0.11&t=1755327253480 404 in 32ms
+@vms/api:dev: [INFO] OPTIONS /api/visitors/dbe2f3a3-48d0-44e4-ad8e-f144222ba7eb 204 0ms
+@vms/api:dev: [WARN] DELETE /dbe2f3a3-48d0-44e4-ad8e-f144222ba7eb 400 3ms
+@vms/web:dev:  GET /dashboard 200 in 53ms
+@vms/web:dev:  GET /service-worker.js?v=1.0.11&t=1755327253480 404 in 48ms
+@vms/web:dev:  ✓ Compiled /host in 259ms (482 modules)
+@vms/web:dev:  GET /host 200 in 311ms
+@vms/api:dev: [INFO] GET /demo-host-id/current-visitors 304 6ms
+@vms/api:dev: [INFO] GET /demo-host-id/pending-approvals 304 5ms
+@vms/api:dev: [INFO] GET /demo-host-id/current-visitors 304 2ms
+@vms/api:dev: [INFO] GET /demo-host-id/pending-approvals 304 3ms
+@vms/web:dev:  GET /service-worker.js?v=1.0.11&t=1755327253480 404 in 71ms
+@vms/web:dev:  GET / 200 in 66ms
+@vms/web:dev:  GET /service-worker.js?v=1.0.11&t=1755327253480 404 in 34ms
+@vms/web:dev:  ✓ Compiled /kiosk in 389ms (488 modules)
+@vms/web:dev:  GET /kiosk 200 in 521ms
+@vms/web:dev:  GET /service-worker.js?v=1.0.11&t=1755327253480 404 in 61ms
+@vms/api:dev: [INFO] OPTIONS /api/visitors 204 1ms
+@vms/api:dev: [INFO] POST / 201 96ms
+@vms/api:dev: [INFO] OPTIONS /api/visits/checkin 204 1ms
+@vms/api:dev: [WARN] POST /checkin 400 2ms
+@vms/api:dev: 10:23:50 AM [tsx] change in ./src\index.ts Restarting...
+@vms/api:dev: 
+@vms/api:dev: ╔═══════════════════════════════════════════════════════════╗
+@vms/api:dev: ║           Aptech Group - Visitor Management System        ║
+@vms/api:dev: ║                      API Server Started                   ║
+@vms/api:dev: ╠═══════════════════════════════════════════════════════════╣
+@vms/api:dev: ║  Port: 3001                                              ║
+@vms/api:dev: ║  Environment: development                               ║
+@vms/api:dev: ║  Health Check: http://localhost:3001/health                 ║
+@vms/api:dev: ╚═══════════════════════════════════════════════════════════╝
+@vms/api:dev:   
+@vms/api:dev: 10:23:57 AM [tsx] change in ./src\index.ts Restarting...
+@vms/api:dev: 
+@vms/api:dev: ╔═══════════════════════════════════════════════════════════╗
+@vms/api:dev: ║           Aptech Group - Visitor Management System        ║
+@vms/api:dev: ║                      API Server Started                   ║
+@vms/api:dev: ╠═══════════════════════════════════════════════════════════╣
+@vms/api:dev: ║  Port: 3001                                              ║
+@vms/api:dev: ║  Environment: development                               ║
+@vms/api:dev: ║  Health Check: http://localhost:3001/health                 ║
+@vms/api:dev: ╚═══════════════════════════════════════════════════════════╝
+@vms/api:dev:   
+@vms/api:dev: 10:24:03 AM [tsx] change in ./src\index.ts Restarting...
+@vms/api:dev: 
+@vms/api:dev: ╔═══════════════════════════════════════════════════════════╗
+@vms/api:dev: ║           Aptech Group - Visitor Management System        ║
+@vms/api:dev: ║                      API Server Started                   ║
+@vms/api:dev: ╠═══════════════════════════════════════════════════════════╣
+@vms/api:dev: ║  Port: 3001                                              ║
+@vms/api:dev: ║  Environment: development                               ║
+@vms/api:dev: ║  Health Check: http://localhost:3001/health                 ║
+@vms/api:dev: ╚═══════════════════════════════════════════════════════════╝
+@vms/api:dev:   
+@vms/web:dev:  ✓ Compiled in 737ms (497 modules)
+@vms/web:dev:  ✓ Compiled in 276ms (254 modules)
+@vms/web:dev:  ✓ Compiled in 189ms (254 modules)
+@vms/web:dev:  ✓ Compiled in 328ms (254 modules)
+@vms/web:dev:  ✓ Compiled in 225ms (254 modules)
+@vms/web:dev:  ✓ Compiled in 288ms (254 modules)
+@vms/web:dev:  ✓ Compiled in 214ms (254 modules)
+@vms/web:dev:  ✓ Compiled in 358ms (254 modules)
+@vms/web:dev:  ✓ Compiled in 289ms (254 modules)
+@vms/web:dev:  ✓ Compiled in 528ms (483 modules)
+@vms/web:dev:  ✓ Compiled in 364ms (483 modules)
+@vms/web:dev:  ✓ Compiled in 315ms (254 modules)
+@vms/web:dev:  ✓ Compiled in 227ms (254 modules)
+@vms/web:dev:  ✓ Compiled in 340ms (254 modules)
+@vms/web:dev:  ✓ Compiled in 460ms (254 modules)
+@vms/web:dev:  ✓ Compiled in 307ms (254 modules)
+@vms/web:dev:  ✓ Compiled in 382ms (254 modules)
+@vms/web:dev:  ✓ Compiled in 367ms (254 modules)
+@vms/web:dev:  ✓ Compiled in 217ms (254 modules)
+@vms/web:dev:  ✓ Compiled in 582ms (471 modules)
+@vms/web:dev:  ✓ Compiled in 303ms (244 modules)
+@vms/web:dev:  ✓ Compiled in 197ms (244 modules)

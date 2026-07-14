@@ -160,6 +160,8 @@ router.post("/login", async (req: Request, res: Response) => {
 
     // Return user data without password
     const { password: _, ...userWithoutPassword } = user;
+    // Ensure organizationId is included
+    userWithoutPassword.organizationId = user.organizationId;
 
     res.json({
       success: true,
@@ -203,6 +205,7 @@ router.get("/me", async (req: Request, res: Response) => {
         email: true,
         name: true,
         role: true,
+        organizationId: true,
         lastLogin: true,
         createdAt: true,
         organization: {

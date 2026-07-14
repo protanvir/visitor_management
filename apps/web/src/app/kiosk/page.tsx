@@ -1,8 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 type Step = "welcome" | "details" | "host" | "confirm" | "complete";
+
+interface Employee {
+  id: string;
+  name: string;
+  email: string;
+  department?: string;
+}
+
+interface Site {
+  id: string;
+  name: string;
+}
 
 interface VisitorData {
   name: string;
@@ -18,402 +30,179 @@ interface VisitorData {
 export default function KioskPage() {
   const [step, setStep] = useState<Step>("welcome");
   const [visitorData, setVisitorData] = useState<VisitorData>({
-    name: "",
-    email: "",
-    phone: "",
-    company: "",
-    purpose: "",
-    hostId: "",
-    hostName: "",
-    siteId: "",
+    name: "", email: "", phone: "", company: "", purpose: "", hostId: "", hostName: "", siteId: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [sites, setSites] = useState<Site[]>([]);
+  const [hostSearch, setHostSearch] = useState("");
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [empRes, siteRes] = await Promise.all([
+          fetch("http://localhost:3001/api/employees/public"),
+          fetch("http://localhost:3001/api/sites/public"),
+        ]);
+        const empData = await empRes.json();
+        const siteData = await siteRes.json();
+        if (empData.success) setEmployees(empData.data || []);
+        if (siteData.success) {
+          const list = siteData.data || [];
+          setSites(list);
+          if (list.length > 0) setVisitorData((prev) => ({ ...prev, siteId: list[0].id }));
+        }
+      } catch (err) { console.error(err); }
+    };
+    fetchData();
+  }, []);
 
   const steps: Step[] = ["welcome", "details", "host", "confirm", "complete"];
-  const stepLabels = ["Welcome", "Your Info", "Host", "Confirm", "Done"];
+  const stepLabels = ["Welcome", "Info", "Host", "Confirm", "Done"];
 
   const handleNext = () => {
-    const currentIndex = steps.indexOf(step);
-    if (currentIndex < steps.length - 1) {
-      setStep(steps[currentIndex + 1]);
-    }
+    const i = steps.indexOf(step);
+    if (i < steps.length - 1) setStep(steps[i + 1]);
   };
 
   const handleBack = () => {
-    const currentIndex = steps.indexOf(step);
-    if (currentIndex > 0) {
-      setStep(steps[currentIndex - 1]);
-    }
+    const i = steps.indexOf(step);
+    if (i > 0) setStep(steps[i - 1]);
   };
 
   const handleSubmit = async () => {
-    setLoading(true);
-    setError("");
-
+    setLoading(true); setError("");
     try {
-      const visitorResponse = await fetch("http://localhost:3001/api/visitors", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: visitorData.name,
-          email: visitorData.email || undefined,
-          phone: visitorData.phone || undefined,
-          company: visitorData.company || undefined,
-        }),
+      const visRes = await fetch("http://localhost:3001/api/visitors", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: visitorData.name, email: visitorData.email || undefined, phone: visitorData.phone || undefined, company: visitorData.company || undefined }),
       });
+      const visResult = await visRes.json();
+      if (!visResult.success) throw new Error(visResult.error);
 
-      const visitorResult = await visitorResponse.json();
-
-      if (!visitorResult.success) {
-        throw new Error(visitorResult.error || "Failed to create visitor");
-      }
-
-      const visitResponse = await fetch("http://localhost:3001/api/visits/checkin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          visitorId: visitorResult.data.id,
-          hostId: visitorData.hostId || "demo-host-id",
-          siteId: visitorData.siteId || "demo-site-id",
-          purpose: visitorData.purpose,
-          visitorType: "guest",
-        }),
+      const visitRes = await fetch("http://localhost:3001/api/visits/checkin", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ visitorId: visResult.data.id, hostId: visitorData.hostId, siteId: visitorData.siteId, purpose: visitorData.purpose, visitorType: "guest" }),
       });
-
-      const visitResult = await visitResponse.json();
-
-      if (!visitResult.success) {
-        throw new Error(visitResult.error || "Failed to check in");
-      }
-
+      const visitResult = await visitRes.json();
+      if (!visitResult.success) throw new Error(visitResult.error);
       handleNext();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { setError(err instanceof Error ? err.message : "Error occurred"); }
+    finally { setLoading(false); }
   };
 
   return (
-    <div className="kiosk-container">
-      <div className="kiosk-card">
-        {/* Header with Aptech branding */}
-        <div className="bg-primary-900 px-8 py-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-white rounded-corporate flex items-center justify-center">
-              <span className="text-primary-900 font-bold text-lg">A</span>
-            </div>
+    <div className="min-h-screen flex items-center justify-center bg-primary p-4">
+      <div className="w-full max-w-2xl bg-base-100 shadow-2xl rounded-xl overflow-hidden">
+        {/* Header */}
+        <div className="bg-primary text-primary-content px-8 py-6">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-12 h-12 bg-white/20 flex items-center justify-center rounded-lg font-bold text-xl">V</div>
             <div>
-              <h1 className="text-xl font-bold text-white">Aptech Group</h1>
-              <p className="text-xs text-primary-300">Visitor Management</p>
+              <h1 className="text-xl font-bold">Visitor Management</h1>
+              <p className="text-sm opacity-80">Check-In Kiosk</p>
             </div>
           </div>
-
-          {/* Progress indicator */}
-          <div className="flex items-center justify-between mt-4">
-            {stepLabels.map((label, index) => (
-              <div key={label} className="flex items-center">
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 ${
-                    step === steps[index]
-                      ? "bg-accent-500 text-white scale-110"
-                      : index < steps.indexOf(step)
-                      ? "bg-success-500 text-white"
-                      : "bg-primary-700 text-primary-300"
-                  }`}
-                >
-                  {index < steps.indexOf(step) ? (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  ) : (
-                    index + 1
-                  )}
-                </div>
-                {index < 4 && (
-                  <div
-                    className={`w-8 h-0.5 mx-1 transition-colors duration-300 ${
-                      index < steps.indexOf(step) ? "bg-success-500" : "bg-primary-700"
-                    }`}
-                  />
-                )}
-              </div>
+          <ul className="steps steps-horizontal w-full">
+            {stepLabels.map((label, i) => (
+              <li key={label} className={`step ${i < steps.indexOf(step) ? "step-primary" : i === steps.indexOf(step) ? "step-primary" : ""}`}>{label}</li>
             ))}
-          </div>
+          </ul>
         </div>
 
-        {/* Step content */}
+        {/* Content */}
         <div className="p-8">
           {step === "welcome" && (
-            <div className="text-center animate-fade-in">
-              <div className="w-20 h-20 bg-accent-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg className="w-10 h-10 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </div>
-              <h2 className="text-3xl font-bold text-primary-900 mb-3">Welcome to Aptech Group</h2>
-              <p className="text-lg text-neutral-500 mb-8">
-                Please check in to begin your visit
-              </p>
-              <button onClick={handleNext} className="kiosk-btn kiosk-btn-primary">
-                Start Check-In
-              </button>
+            <div className="text-center">
+              <div className="text-8xl mb-6">:)</div>
+              <h2 className="text-3xl font-bold mb-3">Welcome</h2>
+              <p className="text-base-content/60 mb-8">Check in to begin your visit</p>
+              <button onClick={handleNext} className="btn btn-primary btn-lg w-full">Start Check-In</button>
             </div>
           )}
 
           {step === "details" && (
-            <div className="animate-fade-in">
-              <h2 className="text-2xl font-bold text-primary-900 mb-2">Your Information</h2>
-              <p className="text-neutral-500 mb-6">Please provide your details</p>
-              
+            <div>
+              <h2 className="text-2xl font-bold mb-6">Your Information</h2>
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1.5">
-                    Full Name <span className="text-danger-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={visitorData.name}
-                    onChange={(e) => setVisitorData({ ...visitorData, name: e.target.value })}
-                    className="input-corporate"
-                    placeholder="Enter your full name"
-                  />
-                </div>
+                <div className="form-control"><label className="label"><span className="label-text">Full Name *</span></label><input type="text" value={visitorData.name} onChange={(e) => setVisitorData({ ...visitorData, name: e.target.value })} className="input input-bordered" placeholder="Enter your full name" /></div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-700 mb-1.5">
-                      Email Address
-                    </label>
-                    <input
-                      type="email"
-                      value={visitorData.email}
-                      onChange={(e) => setVisitorData({ ...visitorData, email: e.target.value })}
-                      className="input-corporate"
-                      placeholder="you@company.com"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-700 mb-1.5">
-                      Phone Number
-                    </label>
-                    <input
-                      type="tel"
-                      value={visitorData.phone}
-                      onChange={(e) => setVisitorData({ ...visitorData, phone: e.target.value })}
-                      className="input-corporate"
-                      placeholder="+1 (555) 000-0000"
-                    />
-                  </div>
+                  <div className="form-control"><label className="label"><span className="label-text">Email</span></label><input type="email" value={visitorData.email} onChange={(e) => setVisitorData({ ...visitorData, email: e.target.value })} className="input input-bordered" placeholder="you@company.com" /></div>
+                  <div className="form-control"><label className="label"><span className="label-text">Phone</span></label><input type="tel" value={visitorData.phone} onChange={(e) => setVisitorData({ ...visitorData, phone: e.target.value })} className="input input-bordered" placeholder="+1 (555) 000-0000" /></div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1.5">
-                    Company / Organization
-                  </label>
-                  <input
-                    type="text"
-                    value={visitorData.company}
-                    onChange={(e) => setVisitorData({ ...visitorData, company: e.target.value })}
-                    className="input-corporate"
-                    placeholder="Enter your company name"
-                  />
-                </div>
+                <div className="form-control"><label className="label"><span className="label-text">Company</span></label><input type="text" value={visitorData.company} onChange={(e) => setVisitorData({ ...visitorData, company: e.target.value })} className="input input-bordered" placeholder="Your company" /></div>
               </div>
-
               <div className="flex justify-between mt-8">
-                <button onClick={handleBack} className="btn-ghost">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                  Back
-                </button>
-                <button
-                  onClick={handleNext}
-                  disabled={!visitorData.name}
-                  className="btn-accent disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Continue
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
+                <button onClick={handleBack} className="btn btn-ghost">Back</button>
+                <button onClick={handleNext} disabled={!visitorData.name} className="btn btn-primary">Continue</button>
               </div>
             </div>
           )}
 
           {step === "host" && (
-            <div className="animate-fade-in">
-              <h2 className="text-2xl font-bold text-primary-900 mb-2">Who are you visiting?</h2>
-              <p className="text-neutral-500 mb-6">Select the person you're here to meet</p>
-              
+            <div>
+              <h2 className="text-2xl font-bold mb-6">Select Host</h2>
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1.5">
-                    Host Name <span className="text-danger-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={visitorData.hostName}
-                    onChange={(e) => setVisitorData({ ...visitorData, hostName: e.target.value })}
-                    className="input-corporate"
-                    placeholder="Search for host name"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1.5">
-                    Purpose of Visit
-                  </label>
-                  <select
-                    value={visitorData.purpose}
-                    onChange={(e) => setVisitorData({ ...visitorData, purpose: e.target.value })}
-                    className="input-corporate"
-                  >
-                    <option value="">Select purpose</option>
-                    <option value="Business Meeting">Business Meeting</option>
-                    <option value="Interview">Interview</option>
-                    <option value="Delivery">Delivery</option>
-                    <option value="Maintenance">Maintenance</option>
-                    <option value="Client Visit">Client Visit</option>
-                    <option value="Vendor Meeting">Vendor Meeting</option>
-                    <option value="Other">Other</option>
+                <div className="form-control"><label className="label"><span className="label-text">Search Host *</span></label><input type="text" value={hostSearch} onChange={(e) => setHostSearch(e.target.value)} className="input input-bordered" placeholder="Type to search..." /></div>
+                {hostSearch && !visitorData.hostId && (
+                  <div className="max-h-48 overflow-y-auto border border-base-300 rounded-lg">
+                    {employees.filter((e) => e.name.toLowerCase().includes(hostSearch.toLowerCase()) || e.email.toLowerCase().includes(hostSearch.toLowerCase())).slice(0, 10).map((emp) => (
+                      <button key={emp.id} type="button" onClick={() => { setVisitorData({ ...visitorData, hostId: emp.id, hostName: emp.name }); setHostSearch(emp.name); }} className="w-full text-left px-4 py-3 hover:bg-base-200 border-b border-base-300 last:border-0">
+                        <div className="font-bold">{emp.name}</div>
+                        <div className="text-xs text-base-content/60">{emp.email}</div>
+                      </button>
+                    ))}
+                    {employees.filter((e) => e.name.toLowerCase().includes(hostSearch.toLowerCase())).length === 0 && <div className="px-4 py-3 text-base-content/60 text-sm">No hosts found</div>}
+                  </div>
+                )}
+                {visitorData.hostId && (
+                  <div className="p-4 bg-success/10 border border-success rounded-lg flex justify-between items-center">
+                    <div><p className="font-bold text-success">{visitorData.hostName}</p><p className="text-xs text-success/70">Selected host</p></div>
+                    <button type="button" onClick={() => { setVisitorData({ ...visitorData, hostId: "", hostName: "" }); setHostSearch(""); }} className="btn btn-ghost btn-xs">Change</button>
+                  </div>
+                )}
+                <div className="form-control"><label className="label"><span className="label-text">Purpose</span></label>
+                  <select value={visitorData.purpose} onChange={(e) => setVisitorData({ ...visitorData, purpose: e.target.value })} className="select select-bordered">
+                    <option value="">Select purpose</option><option>Business Meeting</option><option>Interview</option><option>Delivery</option><option>Maintenance</option><option>Client Visit</option><option>Other</option>
                   </select>
                 </div>
               </div>
-
               <div className="flex justify-between mt-8">
-                <button onClick={handleBack} className="btn-ghost">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                  Back
-                </button>
-                <button
-                  onClick={handleNext}
-                  disabled={!visitorData.hostName}
-                  className="btn-accent disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Continue
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
+                <button onClick={handleBack} className="btn btn-ghost">Back</button>
+                <button onClick={handleNext} disabled={!visitorData.hostId} className="btn btn-primary">Continue</button>
               </div>
             </div>
           )}
 
           {step === "confirm" && (
-            <div className="animate-fade-in">
-              <h2 className="text-2xl font-bold text-primary-900 mb-2">Confirm Your Details</h2>
-              <p className="text-neutral-500 mb-6">Please verify your information</p>
-              
-              <div className="bg-neutral-50 rounded-corporate-lg p-6 border border-neutral-200">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Name</p>
-                    <p className="text-sm font-semibold text-primary-900">{visitorData.name}</p>
-                  </div>
-                  {visitorData.email && (
-                    <div>
-                      <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Email</p>
-                      <p className="text-sm font-semibold text-primary-900">{visitorData.email}</p>
-                    </div>
-                  )}
-                  {visitorData.phone && (
-                    <div>
-                      <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Phone</p>
-                      <p className="text-sm font-semibold text-primary-900">{visitorData.phone}</p>
-                    </div>
-                  )}
-                  {visitorData.company && (
-                    <div>
-                      <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Company</p>
-                      <p className="text-sm font-semibold text-primary-900">{visitorData.company}</p>
-                    </div>
-                  )}
-                  <div>
-                    <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Visiting</p>
-                    <p className="text-sm font-semibold text-primary-900">{visitorData.hostName}</p>
-                  </div>
-                  {visitorData.purpose && (
-                    <div>
-                      <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Purpose</p>
-                      <p className="text-sm font-semibold text-primary-900">{visitorData.purpose}</p>
-                    </div>
-                  )}
-                </div>
+            <div>
+              <h2 className="text-2xl font-bold mb-6">Confirm Details</h2>
+              <div className="bg-base-200 p-6 rounded-lg space-y-3">
+                <div className="flex justify-between"><span className="text-base-content/60">Name:</span><span className="font-bold">{visitorData.name}</span></div>
+                {visitorData.email && <div className="flex justify-between"><span className="text-base-content/60">Email:</span><span>{visitorData.email}</span></div>}
+                {visitorData.phone && <div className="flex justify-between"><span className="text-base-content/60">Phone:</span><span>{visitorData.phone}</span></div>}
+                {visitorData.company && <div className="flex justify-between"><span className="text-base-content/60">Company:</span><span>{visitorData.company}</span></div>}
+                <div className="flex justify-between"><span className="text-base-content/60">Host:</span><span className="text-primary font-bold">{visitorData.hostName}</span></div>
+                {visitorData.purpose && <div className="flex justify-between"><span className="text-base-content/60">Purpose:</span><span>{visitorData.purpose}</span></div>}
               </div>
-
-              {error && (
-                <div className="mt-4 p-4 bg-danger-50 border border-danger-200 rounded-corporate text-danger-700 text-sm">
-                  {error}
-                </div>
-              )}
-
+              {error && <div className="alert alert-error mt-4"><span>{error}</span></div>}
               <div className="flex justify-between mt-8">
-                <button onClick={handleBack} className="btn-ghost">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                  Back
-                </button>
-                <button
-                  onClick={handleSubmit}
-                  disabled={loading}
-                  className="btn-success disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? (
-                    <>
-                      <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                      </svg>
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Complete Check-In
-                    </>
-                  )}
+                <button onClick={handleBack} className="btn btn-ghost">Back</button>
+                <button onClick={handleSubmit} disabled={loading} className="btn btn-success btn-lg">
+                  {loading ? <span className="loading loading-spinner loading-sm"></span> : "Complete Check-In"}
                 </button>
               </div>
             </div>
           )}
 
           {step === "complete" && (
-            <div className="text-center animate-fade-in">
-              <div className="w-20 h-20 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg className="w-10 h-10 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <h2 className="text-3xl font-bold text-primary-900 mb-3">Check-In Complete!</h2>
-              <p className="text-lg text-neutral-600 mb-2">
-                Welcome to Aptech Group, <span className="font-semibold">{visitorData.name}</span>
-              </p>
-              <p className="text-neutral-500 mb-8">
-                {visitorData.hostName} has been notified of your arrival.
-              </p>
-              <button
-                onClick={() => {
-                  setStep("welcome");
-                  setVisitorData({
-                    name: "",
-                    email: "",
-                    phone: "",
-                    company: "",
-                    purpose: "",
-                    hostId: "",
-                    hostName: "",
-                    siteId: "",
-                  });
-                }}
-                className="btn-accent"
-              >
-                Check In Another Visitor
-              </button>
+            <div className="text-center">
+              <div className="text-8xl mb-6">:D</div>
+              <h2 className="text-3xl font-bold text-success mb-3">Check-In Complete!</h2>
+              <p className="text-lg mb-2">Welcome, <span className="font-bold text-primary">{visitorData.name}</span></p>
+              <p className="text-base-content/60 mb-8">{visitorData.hostName} has been notified.</p>
+              <button onClick={() => { setStep("welcome"); setVisitorData({ name: "", email: "", phone: "", company: "", purpose: "", hostId: "", hostName: "", siteId: "" }); setHostSearch(""); }} className="btn btn-primary">Check In Another</button>
             </div>
           )}
         </div>

@@ -27,6 +27,9 @@ import auditRoutes from "./routes/audit";
 import authRoutes from "./routes/auth";
 import smsRoutes from "./routes/sms";
 import permissionRoutes from "./routes/permissions";
+import userRoutes from "./routes/users";
+import organizationRoutes from "./routes/organizations";
+import { authenticateToken } from "./routes/auth";
 
 // Load environment variables
 dotenv.config();
@@ -110,6 +113,64 @@ app.use("/api/badges", badgeRoutes);
 app.use("/api/audit", auditRoutes);
 app.use("/api/sms", smsRoutes);
 app.use("/api/permissions", permissionRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/organizations", organizationRoutes);
+
+// Public routes - no authentication required
+app.get("/api/employees/public", async (req, res) => {
+  try {
+    const employees = await prisma.employee.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        department: true,
+      },
+      orderBy: { name: "asc" },
+    });
+    res.json({ success: true, data: employees });
+  } catch (error) {
+    res.status(500).json({ success: false, error: "Failed to fetch employees" });
+  }
+});
+
+app.get("/api/sites/public", async (req, res) => {
+  try {
+    const sites = await prisma.site.findMany({
+      select: {
+        id: true,
+        name: true,
+        address: true,
+      },
+      orderBy: { name: "asc" },
+    });
+    res.json({ success: true, data: sites });
+  } catch (error) {
+    res.status(500).json({ success: false, error: "Failed to fetch sites" });
+  }
+});
+
+// Protected routes - require authentication
+const protectedRoutes = [
+  "/api/visitors",
+  "/api/visits",
+  "/api/employees",
+  "/api/sites",
+  "/api/reports",
+  "/api/notifications",
+  "/api/areas",
+  "/api/safety",
+  "/api/nda",
+  "/api/badges",
+  "/api/audit",
+  "/api/sms",
+  "/api/permissions",
+  "/api/organizations",
+];
+
+protectedRoutes.forEach((route) => {
+  app.use(route, authenticateToken);
+});
 
 // API info endpoint
 app.get("/api", (req, res) => {
@@ -131,6 +192,8 @@ app.get("/api", (req, res) => {
       badges: "/api/badges",
       audit: "/api/audit",
       sms: "/api/sms",
+      users: "/api/users",
+      organizations: "/api/organizations",
     },
   });
 });

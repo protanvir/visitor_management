@@ -1,18 +1,13 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/lib/auth-context";
 
-const inter = Inter({ 
-  subsets: ["latin"],
-  variable: "--font-inter",
-});
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Aptech Group - Visitor Management System",
-  description: "Modern visitor management solution for Aptech Group office and factory environments",
-  icons: {
-    icon: "/favicon.ico",
-  },
+  title: "VMS - Visitor Management System",
+  description: "Visitor Management System",
 };
 
 export default function RootLayout({
@@ -21,9 +16,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={inter.variable}>
-      <body className="font-sans antialiased bg-neutral-50 text-neutral-900">
-        {children}
+    <html lang="en" data-theme="corporate" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function() {
+            const savedTheme = localStorage.getItem('daisyui-theme') || 'corporate';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+          })();
+        `}} />
+      </head>
+      <body className={`${inter.className}`}>
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
