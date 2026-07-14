@@ -16,16 +16,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" data-theme="corporate" suppressHydrationWarning>
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: `
-          (function() {
-            const savedTheme = localStorage.getItem('daisyui-theme') || 'corporate';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-          })();
-        `}} />
-      </head>
-      <body className={`${inter.className}`}>
+    <html lang="en">
+      <body className={inter.className}>
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

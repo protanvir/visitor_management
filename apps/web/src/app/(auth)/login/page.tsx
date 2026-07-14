@@ -22,7 +22,6 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-
     try {
       await login(email, password);
       router.push("/dashboard");
@@ -35,8 +34,8 @@ export default function LoginPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <span className="loading loading-spinner loading-lg text-primary"></span>
+      <div className="min-h-screen bg-page flex items-center justify-center">
+        <div className="loading w-8 h-8 text-brand"></div>
       </div>
     );
   }
@@ -44,75 +43,37 @@ export default function LoginPage() {
   if (isAuthenticated) return null;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-base-200 p-4">
+    <div className="min-h-screen bg-page flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-primary text-primary-content flex items-center justify-center mx-auto mb-4 rounded-xl font-bold text-2xl">
+          <div className="w-16 h-16 bg-brand text-white flex items-center justify-center mx-auto mb-4 rounded-xl font-bold text-2xl">
             V
           </div>
-          <h1 className="text-3xl font-bold">VMS</h1>
-          <p className="text-base-content/60">Visitor Management System</p>
+          <h1 className="text-3xl font-bold text-heading">VMS</h1>
+          <p className="text-muted">Visitor Management System</p>
         </div>
 
-        <div className="card bg-base-100 shadow-xl">
-          <div className="card-body">
-            <h2 className="card-title text-primary">Sign In</h2>
-
-            {error && (
-              <div className="alert alert-error">
-                <span>{error}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Email</span>
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="input input-bordered w-full"
-                  placeholder="you@company.com"
-                  required
-                />
-              </div>
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Password</span>
-                </label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="input input-bordered w-full"
-                  placeholder="Enter your password"
-                  required
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn btn-primary w-full"
-              >
-                {loading ? (
-                  <span className="loading loading-spinner loading-sm"></span>
-                ) : (
-                  "Sign In"
-                )}
-              </button>
-            </form>
-          </div>
+        <div className="card p-8">
+          <h2 className="text-xl font-bold text-heading mb-6">Sign In</h2>
+          {error && <div className="alert alert-error mb-4"><span>{error}</span></div>}
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="label">Email</label>
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="input" placeholder="you@company.com" required />
+            </div>
+            <div>
+              <label className="label">Password</label>
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="input" placeholder="Enter your password" required />
+            </div>
+            <button type="submit" disabled={loading} className="btn btn-primary w-full">
+              {loading ? <span className="loading"></span> : "Sign In"}
+            </button>
+          </form>
         </div>
 
-        <div className="mt-6 p-4 bg-base-300 rounded-lg text-center">
-          <p className="text-sm font-medium">
-            Demo Credentials:
-          </p>
-          <p className="text-xs text-base-content/60 mt-1">
-            Email: admin@aptechgroup.com | Password: admin123
-          </p>
+        <div className="mt-6 p-4 bg-neutral-100 rounded-lg text-center">
+          <p className="text-sm font-medium text-heading">Demo Credentials:</p>
+          <p className="text-xs text-muted mt-1">Email: admin@aptechgroup.com | Password: admin123</p>
         </div>
       </div>
     </div>

@@ -63,6 +63,7 @@ model Employee {
   site           Site?        @relation(fields: [siteId], references: [id])
   email          String       @unique
   name           String
+  designation    String?
   department     String?
   role           String       @default("employee")
   phone          String?

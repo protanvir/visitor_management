@@ -24,11 +24,13 @@ router.get("/", async (req: Request, res: Response) => {
       search,
       sortBy = "createdAt",
       sortOrder = "desc",
+      include,
     } = req.query;
 
     const pageNum = parseInt(page as string);
     const size = parseInt(pageSize as string);
     const skip = (pageNum - 1) * size;
+    const includeVisits = include === "visits";
 
     // Build search condition
     const searchCondition = search
@@ -52,6 +54,16 @@ router.get("/", async (req: Request, res: Response) => {
           _count: {
             select: { visits: true },
           },
+          ...(includeVisits ? {
+            visits: {
+              take: 5,
+              orderBy: { createdAt: "desc" },
+              include: {
+                host: { select: { name: true } },
+                site: { select: { name: true } },
+              },
+            },
+          } : {}),
         },
       }),
       prisma.visitor.count({ where: searchCondition }),

@@ -98,25 +98,7 @@ app.get("/health", (req, res) => {
   });
 });
 
-// API Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/visitors", visitorRoutes);
-app.use("/api/visits", visitRoutes);
-app.use("/api/employees", employeeRoutes);
-app.use("/api/sites", siteRoutes);
-app.use("/api/reports", reportRoutes);
-app.use("/api/notifications", notificationRoutes);
-app.use("/api/areas", areaRoutes);
-app.use("/api/safety", safetyRoutes);
-app.use("/api/nda", ndaRoutes);
-app.use("/api/badges", badgeRoutes);
-app.use("/api/audit", auditRoutes);
-app.use("/api/sms", smsRoutes);
-app.use("/api/permissions", permissionRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/organizations", organizationRoutes);
-
-// Public routes - no authentication required
+// Public routes - no authentication required (must be before protected routes)
 app.get("/api/employees/public", async (req, res) => {
   try {
     const employees = await prisma.employee.findMany({
@@ -124,7 +106,9 @@ app.get("/api/employees/public", async (req, res) => {
         id: true,
         name: true,
         email: true,
+        designation: true,
         department: true,
+        siteId: true,
       },
       orderBy: { name: "asc" },
     });
@@ -149,6 +133,24 @@ app.get("/api/sites/public", async (req, res) => {
     res.status(500).json({ success: false, error: "Failed to fetch sites" });
   }
 });
+
+// API Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/visitors", visitorRoutes);
+app.use("/api/visits", visitRoutes);
+app.use("/api/employees", employeeRoutes);
+app.use("/api/sites", siteRoutes);
+app.use("/api/reports", reportRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/areas", areaRoutes);
+app.use("/api/safety", safetyRoutes);
+app.use("/api/nda", ndaRoutes);
+app.use("/api/badges", badgeRoutes);
+app.use("/api/audit", auditRoutes);
+app.use("/api/sms", smsRoutes);
+app.use("/api/permissions", permissionRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/organizations", organizationRoutes);
 
 // Protected routes - require authentication
 const protectedRoutes = [

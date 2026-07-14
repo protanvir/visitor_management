@@ -8,6 +8,7 @@ const router = Router();
 const createEmployeeSchema = z.object({
   email: z.string().email("Invalid email"),
   name: z.string().min(1, "Name is required"),
+  designation: z.string().optional(),
   department: z.string().optional(),
   role: z.enum(["admin", "receptionist", "security", "employee"]).default("employee"),
   phone: z.string().optional(),
