@@ -26,6 +26,7 @@ import badgeRoutes from "./routes/badges";
 import auditRoutes from "./routes/audit";
 import authRoutes from "./routes/auth";
 import smsRoutes from "./routes/sms";
+import permissionRoutes from "./routes/permissions";
 
 // Load environment variables
 dotenv.config();
@@ -108,6 +109,7 @@ app.use("/api/nda", ndaRoutes);
 app.use("/api/badges", badgeRoutes);
 app.use("/api/audit", auditRoutes);
 app.use("/api/sms", smsRoutes);
+app.use("/api/permissions", permissionRoutes);
 
 // API info endpoint
 app.get("/api", (req, res) => {

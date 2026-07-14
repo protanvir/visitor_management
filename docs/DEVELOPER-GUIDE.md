@@ -186,6 +186,58 @@ npx prisma studio
 
 ---
 
+## Frontend Components
+
+### Photo Capture
+
+Location: `apps/web/src/components/photo/PhotoCapture.tsx`
+
+Usage:
+```tsx
+import PhotoCapture from "@/components/photo/PhotoCapture";
+
+<PhotoCapture
+  onCapture={(photoData) => console.log(photoData)}
+  width={400}
+  height={300}
+/>
+```
+
+### QR Scanner
+
+Location: `apps/web/src/components/qr/QRScanner.tsx`
+
+Usage:
+```tsx
+import QRScanner from "@/components/qr/QRScanner";
+
+<QRScanner
+  onScan={(data) => handleQRScan(data)}
+  isActive={scannerActive}
+/>
+```
+
+### Badge Components
+
+Location: `apps/web/src/components/badges/`
+
+- **BadgeDisplay.tsx**: Main badge display with QR code
+- **BadgeRefresh.tsx**: Auto-refresh controls
+- **BadgeShare.tsx**: Share badge via Email/SMS/Link
+
+Usage:
+```tsx
+import BadgeDisplay from "@/components/badges/BadgeDisplay";
+import BadgeRefresh from "@/components/badges/BadgeRefresh";
+import BadgeShare from "@/components/badges/BadgeShare";
+
+<BadgeDisplay visitId={visitId} />
+<BadgeRefresh visitId={visitId} onRefresh={refreshBadge} />
+<BadgeShare visitId={visitId} badgeUrl={url} visitorName={name} />
+```
+
+---
+
 ## API Development
 
 ### Adding New Routes

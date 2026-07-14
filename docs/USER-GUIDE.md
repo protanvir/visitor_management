@@ -161,6 +161,86 @@ When a visitor leaves:
 2. Badge status updates in the system
 3. Overdue badges are flagged
 
+### Badge Sharing
+
+Share your badge with others:
+1. Open badge page at http://localhost:3000/badge
+2. Click "Share" button
+3. Choose sharing method:
+   - Copy link to clipboard
+   - Share via Email
+   - Share via SMS
+   - Native share (mobile devices)
+
+### Badge Refresh
+
+Auto-refresh keeps your badge current:
+1. Badge page shows refresh controls
+2. Click "Auto" to enable auto-refresh (5-minute intervals)
+3. Click refresh icon for manual refresh
+
+---
+
+## Photo Capture
+
+### For Visitors
+
+During check-in, visitors can capture a photo:
+1. Camera preview appears on kiosk
+2. Position face within the frame
+3. Tap capture button
+4. Photo is saved with visitor record
+
+### For Administrators
+
+Capture visitor photos during registration:
+1. Open visitor registration form
+2. Click "Start Camera" button
+3. Capture photo
+4. Photo is stored securely
+
+---
+
+## QR Code Scanning
+
+### Checking In with QR Code
+
+1. Pre-registered visitors receive QR code via email
+2. At kiosk, tap "Scan QR Code"
+3. Position QR code within scanner frame
+4. Check-in completes automatically
+
+### Manual Input
+
+If camera is unavailable:
+1. Click "Manual Input" button
+2. Enter the QR code data manually
+3. System validates and checks in
+
+---
+
+## Touch-Friendly Interface
+
+The system is optimized for touch devices:
+
+### Kiosk Mode
+- Large buttons for easy tapping
+- Clear visual feedback
+- Swipe gestures for navigation
+- Minimal text input required
+
+### Mobile Host View
+- Responsive design for phones
+- Touch-friendly approval buttons
+- Pull-to-refresh for updates
+- Quick action buttons
+
+### Accessibility
+- High contrast for visibility
+- Large touch targets (minimum 44px)
+- Clear focus states
+- Screen reader compatible
+
 ---
 
 ## Safety & Security

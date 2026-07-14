@@ -570,6 +570,67 @@ Authorization: Bearer <token>
 
 ---
 
+## Permissions
+
+### Get Role Permissions
+
+**GET** `/api/permissions/roles/:role/permissions`
+
+Get all permissions for a specific role (admin, manager, user).
+
+### Get All Permissions
+
+**GET** `/api/permissions/permissions`
+
+Get all available permissions grouped by category.
+
+### Check Permission
+
+**POST** `/api/permissions/check`
+
+**Request Body:**
+```json
+{
+  "role": "admin",
+  "permission": "visitors.create"
+}
+```
+
+### Bulk Check Permissions
+
+**POST** `/api/permissions/bulk-check`
+
+**Request Body:**
+```json
+{
+  "role": "admin",
+  "permissions": ["visitors.create", "visits.approve", "reports.export"]
+}
+```
+
+### Get Site Permissions
+
+**GET** `/api/permissions/site/:siteId`
+
+Get site-specific permission settings.
+
+### Update Site Permissions
+
+**PUT** `/api/permissions/site/:siteId`
+
+**Request Body:**
+```json
+{
+  "settings": {
+    "requireNDA": true,
+    "requireSafetyBriefing": true,
+    "maxConcurrentVisitors": 50
+  }
+}
+```
+
+---
+
 ## Error Responses
 
 All errors follow this format:
