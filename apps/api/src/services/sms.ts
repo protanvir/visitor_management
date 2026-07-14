@@ -83,24 +83,31 @@ export async function sendSms(options: SmsOptions): Promise<boolean> {
       return false;
     }
 
-    // Prepare request body
-    const params = new URLSearchParams();
-    params.append("api_key", adnsmsConfig.apiKey);
-    params.append("api_secret", adnsmsConfig.apiSecret);
-    params.append("request_type", "SINGLE_SMS");
-    params.append("message_type", "TEXT");
-    params.append("mobile", mobile);
-    params.append("message_body", options.message);
+    // Prepare request body as JSON (per ADNsms API docs)
+    const requestBody = {
+      api_key: adnsmsConfig.apiKey,
+      api_secret: adnsmsConfig.apiSecret,
+      request_type: "SINGLE_SMS",
+      message_type: "TEXT",
+      mobile: mobile,
+      message_body: options.message,
+    };
 
-    // Send request to ADNSMS
+    // Send request to ADNSMS with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
     const response = await fetch(`${adnsmsConfig.baseUrl}/api/v1/secure/send-sms`, {
       method: "POST",
       headers: {
         "Accept": "application/json",
-        "Content-Type": "application/x-www-form-urlencoded",
+        "Content-Type": "application/json",
       },
-      body: params.toString(),
+      body: JSON.stringify(requestBody),
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     const result: AdnsmsResponse = await response.json();
 
@@ -111,8 +118,12 @@ export async function sendSms(options: SmsOptions): Promise<boolean> {
       console.error("[SMS Service] Failed to send SMS:", result);
       return false;
     }
-  } catch (error) {
-    console.error("[SMS Service] Error sending SMS:", error);
+  } catch (error: any) {
+    if (error.name === "AbortError") {
+      console.error("[SMS Service] SMS request timed out");
+    } else {
+      console.error("[SMS Service] Error sending SMS:", error.message || error);
+    }
     return false;
   }
 }
@@ -141,26 +152,33 @@ export async function sendBulkSms(
       return { success: false, sentCount: 0, failedCount: recipients.length };
     }
 
-    // Prepare request body
-    const params = new URLSearchParams();
-    params.append("api_key", adnsmsConfig.apiKey);
-    params.append("api_secret", adnsmsConfig.apiSecret);
-    params.append("request_type", "GENERAL_CAMPAIGN");
-    params.append("message_type", "TEXT");
-    params.append("mobile", formattedNumbers.join(","));
-    params.append("message_body", message);
-    params.append("isPromotional", "0");
-    params.append("campaign_title", campaignTitle);
+    // Prepare request body as JSON (per ADNsms API docs)
+    const requestBody = {
+      api_key: adnsmsConfig.apiKey,
+      api_secret: adnsmsConfig.apiSecret,
+      request_type: "GENERAL_CAMPAIGN",
+      message_type: "TEXT",
+      mobile: formattedNumbers.join(","),
+      message_body: message,
+      isPromotional: 0,
+      campaign_title: campaignTitle,
+    };
 
-    // Send request to ADNSMS
+    // Send request to ADNSMS with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
     const response = await fetch(`${adnsmsConfig.baseUrl}/api/v1/secure/send-sms`, {
       method: "POST",
       headers: {
         "Accept": "application/json",
-        "Content-Type": "application/x-www-form-urlencoded",
+        "Content-Type": "application/json",
       },
-      body: params.toString(),
+      body: JSON.stringify(requestBody),
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     const result: AdnsmsResponse = await response.json();
 
@@ -173,8 +191,12 @@ export async function sendBulkSms(
       console.error("[SMS Service] Failed to send bulk SMS:", result);
       return { success: false, sentCount: 0, failedCount: recipients.length };
     }
-  } catch (error) {
-    console.error("[SMS Service] Error sending bulk SMS:", error);
+  } catch (error: any) {
+    if (error.name === "AbortError") {
+      console.error("[SMS Service] Bulk SMS request timed out");
+    } else {
+      console.error("[SMS Service] Error sending bulk SMS:", error.message || error);
+    }
     return { success: false, sentCount: 0, failedCount: recipients.length };
   }
 }
@@ -186,18 +208,25 @@ export async function checkBalance(): Promise<{ success: boolean; balance?: numb
       return { success: false, error: "ADNSMS not configured" };
     }
 
-    const params = new URLSearchParams();
-    params.append("api_key", adnsmsConfig.apiKey);
-    params.append("api_secret", adnsmsConfig.apiSecret);
+    const requestBody = {
+      api_key: adnsmsConfig.apiKey,
+      api_secret: adnsmsConfig.apiSecret,
+    };
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
 
     const response = await fetch(`${adnsmsConfig.baseUrl}/api/v1/secure/check-balance`, {
       method: "POST",
       headers: {
         "Accept": "application/json",
-        "Content-Type": "application/x-www-form-urlencoded",
+        "Content-Type": "application/json",
       },
-      body: params.toString(),
+      body: JSON.stringify(requestBody),
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     const result = await response.json();
 
@@ -206,8 +235,12 @@ export async function checkBalance(): Promise<{ success: boolean; balance?: numb
     } else {
       return { success: false, error: result.error?.error_message || "Unknown error" };
     }
-  } catch (error) {
-    console.error("[SMS Service] Error checking balance:", error);
+  } catch (error: any) {
+    if (error.name === "AbortError") {
+      console.error("[SMS Service] Balance check timed out");
+      return { success: false, error: "Request timed out" };
+    }
+    console.error("[SMS Service] Error checking balance:", error.message || error);
     return { success: false, error: "Failed to check balance" };
   }
 }
@@ -219,19 +252,26 @@ export async function checkSmsStatus(smsUid: string): Promise<{ success: boolean
       return { success: false, error: "ADNSMS not configured" };
     }
 
-    const params = new URLSearchParams();
-    params.append("api_key", adnsmsConfig.apiKey);
-    params.append("api_secret", adnsmsConfig.apiSecret);
-    params.append("sms_uid", smsUid);
+    const requestBody = {
+      api_key: adnsmsConfig.apiKey,
+      api_secret: adnsmsConfig.apiSecret,
+      sms_uid: smsUid,
+    };
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
 
     const response = await fetch(`${adnsmsConfig.baseUrl}/api/v1/secure/sms-status`, {
       method: "POST",
       headers: {
         "Accept": "application/json",
-        "Content-Type": "application/x-www-form-urlencoded",
+        "Content-Type": "application/json",
       },
-      body: params.toString(),
+      body: JSON.stringify(requestBody),
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     const result = await response.json();
 

@@ -9,7 +9,7 @@ interface Visit {
   checkOutTime: string | null;
   purpose: string | null;
   visitorType: string;
-  visitor: { id: string; name: string; email: string | null; phone: string | null; company: string | null };
+  visitor: { id: string; visitorCode: string; name: string; email: string | null; phone: string | null; company: string | null };
   host: { id: string; name: string; email: string };
   site: { id: string; name: string };
   badge: { id: string; qrCode: string; expiresAt: string; returnedAt: string | null } | null;
@@ -105,18 +105,19 @@ export default function CurrentVisitorsPage() {
           <table className="table">
             <thead>
               <tr>
+                <th>Visitor ID</th>
                 <th>Visitor</th>
                 <th>Host</th>
                 <th>Site</th>
                 <th>Check-In Time</th>
                 <th>Duration</th>
-                <th>Purpose</th>
                 <th className="text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredVisits.map((visit) => (
                 <tr key={visit.id}>
+                  <td><span className="font-mono font-bold text-brand">{visit.visitor.visitorCode}</span></td>
                   <td>
                     <div className="flex items-center gap-3">
                       <div className="avatar w-10 h-10 text-sm bg-success text-white">{visit.visitor.name.charAt(0)}</div>

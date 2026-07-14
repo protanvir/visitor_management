@@ -75,15 +75,16 @@ model Employee {
 
 // Visitor model
 model Visitor {
-  id        String   @id @default(uuid())
-  email     String?
-  name      String
-  phone     String?
-  company   String?
-  photoUrl  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  visits    Visit[]
+  id          String   @id @default(uuid())
+  visitorCode String   @unique // Short readable ID like "V-ABC123"
+  email       String?
+  name        String
+  phone       String?
+  company     String?
+  photoUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  visits      Visit[]
 
   @@unique([email, name])
 }

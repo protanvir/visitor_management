@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth-context";
 
 interface Visitor {
   id: string;
+  visitorCode: string;
   name: string;
   email: string | null;
   phone: string | null;
@@ -102,12 +103,13 @@ export default function VisitorsPage() {
           <div className="flex justify-center py-12"><div className="loading w-8 h-8 text-brand"></div></div>
         ) : visitors && visitors.data.length > 0 ? (
           <table className="table">
-            <thead><tr><th>Visitor</th><th>Email</th><th>Company</th><th>Status</th><th>Current Visit</th><th>Duration</th><th>Actions</th></tr></thead>
+            <thead><tr><th>ID</th><th>Visitor</th><th>Email</th><th>Company</th><th>Status</th><th>Duration</th><th>Actions</th></tr></thead>
             <tbody>
               {visitors.data.map((visitor) => {
                 const activeVisit = getActiveVisit(visitor.visits || []);
                 return (
                   <tr key={visitor.id}>
+                    <td><span className="font-mono font-bold text-brand">{visitor.visitorCode}</span></td>
                     <td>
                       <div className="flex items-center gap-3">
                         <div className={`avatar w-10 h-10 text-sm ${activeVisit ? "bg-success text-white" : ""}`}>{visitor.name.charAt(0)}</div>

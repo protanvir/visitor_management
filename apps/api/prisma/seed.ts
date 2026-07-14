@@ -166,6 +166,7 @@ async function main() {
   const visitors = await Promise.all([
     prisma.visitor.create({
       data: {
+        visitorCode: "V-001ABC",
         email: "visitor1@example.com",
         name: "Rahul Sharma",
         phone: "+919876543210",
@@ -174,6 +175,7 @@ async function main() {
     }),
     prisma.visitor.create({
       data: {
+        visitorCode: "V-002DEF",
         email: "visitor2@example.com",
         name: "Sarah Wilson",
         phone: "+447911123456",
@@ -182,6 +184,7 @@ async function main() {
     }),
     prisma.visitor.create({
       data: {
+        visitorCode: "V-003GHI",
         email: "visitor3@example.com",
         name: "Ahmed Ali",
         phone: "+8801812345678",
@@ -190,6 +193,7 @@ async function main() {
     }),
     prisma.visitor.create({
       data: {
+        visitorCode: "V-004JKL",
         email: "visitor4@example.com",
         name: "John Smith",
         phone: "+14155551234",
@@ -198,6 +202,7 @@ async function main() {
     }),
     prisma.visitor.create({
       data: {
+        visitorCode: "V-005MNO",
         email: "visitor5@example.com",
         name: "Li Wei",
         phone: "+8613812345678",

@@ -288,6 +288,18 @@ router.post("/checkin", async (req: Request, res: Response) => {
       console.error("Failed to send host notification:", err);
     });
 
+    // Send SMS to host
+    if (visit.host.phone) {
+      const smsMessage = `Visitor Alert: ${visit.visitor.name} has arrived to see you at ${visit.site.name}. Purpose: ${visit.purpose || "Not specified"}. Please meet them at reception.`;
+      import("../services/sms").then(({ sendSms }) => {
+        sendSms({ to: visit.host.phone!, message: smsMessage }).catch((err) => {
+          console.error("Failed to send SMS to host:", err);
+        });
+      }).catch((err) => {
+        console.error("Failed to load SMS service:", err);
+      });
+    }
+
     res.json({
       success: true,
       data: {

@@ -4,6 +4,16 @@ import { z } from "zod";
 
 const router = Router();
 
+// Generate short alphanumeric visitor code like "V-ABC123"
+function generateVisitorCode(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Removed confusing chars (0,O,1,I)
+  let code = "";
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return `V-${code}`;
+}
+
 // Validation schemas
 const createVisitorSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -115,6 +125,33 @@ router.get("/:id", async (req: Request, res: Response) => {
   }
 });
 
+// Look up visitor by phone number
+router.get("/lookup/phone/:phone", async (req: Request, res: Response) => {
+  try {
+    const { phone } = req.params;
+    const normalizedPhone = phone.replace(/\D/g, "");
+
+    const visitor = await prisma.visitor.findFirst({
+      where: {
+        OR: [
+          { phone: normalizedPhone },
+          { phone: phone },
+          { phone: { contains: normalizedPhone } },
+        ],
+      },
+    });
+
+    if (!visitor) {
+      return res.status(404).json({ success: false, error: "Visitor not found" });
+    }
+
+    res.json({ success: true, data: visitor });
+  } catch (error) {
+    console.error("Error looking up visitor:", error);
+    res.status(500).json({ success: false, error: "Failed to look up visitor" });
+  }
+});
+
 // Create new visitor
 router.post("/", async (req: Request, res: Response) => {
   try {
@@ -134,8 +171,20 @@ router.post("/", async (req: Request, res: Response) => {
       }
     }
 
+    // Generate unique visitor code
+    let visitorCode = generateVisitorCode();
+    let codeExists = true;
+    while (codeExists) {
+      const existing = await prisma.visitor.findUnique({ where: { visitorCode } });
+      if (!existing) codeExists = false;
+      else visitorCode = generateVisitorCode();
+    }
+
     const visitor = await prisma.visitor.create({
-      data: validatedData,
+      data: {
+        ...validatedData,
+        visitorCode,
+      },
     });
 
     res.status(201).json({
