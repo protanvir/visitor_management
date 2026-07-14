@@ -1,6 +1,6 @@
 import { prisma } from "../index";
 import { sendEmail, emailTemplates } from "./email";
-import { sendSms, smsTemplates, isValidPhoneNumber } from "./sms";
+import { sendSms, smsTemplates, isValidBangladeshiPhone } from "./sms";
 
 interface NotificationData {
   visitId: string;
@@ -91,7 +91,7 @@ async function sendMultiChannelNotification(
     });
   }
 
-  if (smsData && isValidPhoneNumber(smsData.to)) {
+  if (smsData && isValidBangladeshiPhone(smsData.to)) {
     results.sms = await sendNotification({
       visitId,
       type: "sms",

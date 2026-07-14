@@ -240,12 +240,20 @@ export default function KioskPage() {
       <div className="w-full max-w-2xl bg-surface shadow-xl rounded-xl overflow-hidden">
         {/* Header */}
         <div className="bg-brand-gradient text-white px-8 py-6">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-12 h-12 bg-white/20 flex items-center justify-center rounded-lg font-bold text-xl">V</div>
-            <div>
-              <h1 className="text-xl font-bold">Visitor Management</h1>
-              <p className="text-sm opacity-80">Check-In Kiosk</p>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white/20 flex items-center justify-center rounded-lg font-bold text-xl">V</div>
+              <div>
+                <h1 className="text-xl font-bold">Visitor Management</h1>
+                <p className="text-sm opacity-80">Check-In Kiosk</p>
+              </div>
             </div>
+            <a href="/" className="text-sm text-white/80 hover:text-white flex items-center gap-1">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Return to Dashboard
+            </a>
           </div>
           {/* Progress Steps */}
           <div className="flex items-center gap-1 mt-4">

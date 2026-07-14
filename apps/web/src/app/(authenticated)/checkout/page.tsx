@@ -98,7 +98,7 @@ export default function CheckoutPage() {
             onChange={(e) => setVisitId(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && lookupVisit()}
             className="input flex-1"
-            placeholder="Enter Visit ID or scan QR code"
+            placeholder="Enter Visit ID or Visitor ID"
           />
           <button onClick={lookupVisit} disabled={loading || !visitId.trim()} className="btn btn-primary">
             {loading ? <span className="loading"></span> : "Look Up"}

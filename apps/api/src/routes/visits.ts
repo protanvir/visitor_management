@@ -93,21 +93,42 @@ router.get("/", async (req: Request, res: Response) => {
   }
 });
 
-// Get visit by ID
+// Get visit by ID, Visitor ID, or Visitor Code (V-XXX)
 router.get("/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const visit = await prisma.visit.findUnique({
-      where: { id },
-      include: {
-        visitor: true,
-        host: true,
-        site: true,
-        badge: true,
-        notifications: true,
-      },
-    });
+    const include = {
+      visitor: true,
+      host: true,
+      site: true,
+      badge: true,
+      notifications: true,
+    };
+
+    // 1. Try by visit ID
+    let visit = await prisma.visit.findUnique({ where: { id }, include });
+
+    // 2. Try by visitor ID (most recent visit for that visitor)
+    if (!visit) {
+      visit = await prisma.visit.findFirst({
+        where: { visitorId: id },
+        orderBy: { createdAt: "desc" },
+        include,
+      });
+    }
+
+    // 3. Try by visitorCode (e.g. V-ABC123)
+    if (!visit) {
+      const visitor = await prisma.visitor.findUnique({ where: { visitorCode: id } });
+      if (visitor) {
+        visit = await prisma.visit.findFirst({
+          where: { visitorId: visitor.id },
+          orderBy: { createdAt: "desc" },
+          include,
+        });
+      }
+    }
 
     if (!visit) {
       return res.status(404).json({ success: false, error: "Visit not found" });
