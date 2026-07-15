@@ -12,15 +12,16 @@ datasource db {
 
 // Organization model
 model Organization {
-  id         String       @id @default(uuid())
-  name       String
-  settings   Json?
-  sites      Site[]
-  employees  Employee[]
-  users      User[]
-  watchlists Watchlist[]
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
+  id           String         @id @default(uuid())
+  name         String
+  settings     Json?
+  sites        Site[]
+  employees    Employee[]
+  users        User[]
+  watchlists   Watchlist[]
+  visitorTypes VisitorType[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 }
 
 // User model (for authentication)
@@ -186,4 +187,21 @@ model SafetyChecklist {
   completed Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// Visitor Type model (customizable visitor categories)
+model VisitorType {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  name           String       // e.g., "Buyer", "Supplier", "Auditor"
+  description    String?
+  color          String?      // Optional color for badge styling
+  active         Boolean      @default(true)
+  sortOrder      Int          @default(0)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
 }

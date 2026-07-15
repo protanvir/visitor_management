@@ -68,6 +68,47 @@ router.get("/", async (req: Request, res: Response) => {
   }
 });
 
+// Lookup badge by QR code (used by kiosk for pre-registered visitors)
+router.get("/lookup", async (req: Request, res: Response) => {
+  try {
+    const { qrCode } = req.query;
+
+    if (!qrCode) {
+      return res.status(400).json({ success: false, error: "qrCode query parameter is required" });
+    }
+
+    const badge = await prisma.badge.findFirst({
+      where: { qrCode: qrCode as string },
+      include: {
+        visit: {
+          include: {
+            visitor: true,
+            host: true,
+            site: true,
+          },
+        },
+      },
+    });
+
+    if (!badge) {
+      return res.status(404).json({ success: false, error: "Badge not found" });
+    }
+
+    if (badge.expiresAt < new Date()) {
+      return res.status(400).json({ success: false, error: "Badge has expired" });
+    }
+
+    if (badge.returnedAt) {
+      return res.status(400).json({ success: false, error: "Badge has already been returned" });
+    }
+
+    res.json({ success: true, data: badge });
+  } catch (error) {
+    console.error("Error looking up badge:", error);
+    res.status(500).json({ success: false, error: "Failed to lookup badge" });
+  }
+});
+
 // Get badge by visit ID
 router.get("/visit/:visitId", async (req: Request, res: Response) => {
   try {

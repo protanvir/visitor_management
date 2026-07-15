@@ -29,6 +29,7 @@ import smsRoutes from "./routes/sms";
 import permissionRoutes from "./routes/permissions";
 import userRoutes from "./routes/users";
 import organizationRoutes from "./routes/organizations";
+import visitorTypeRoutes from "./routes/visitor-types";
 import { authenticateToken } from "./routes/auth";
 
 // Load environment variables
@@ -151,6 +152,7 @@ app.use("/api/sms", smsRoutes);
 app.use("/api/permissions", permissionRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/organizations", organizationRoutes);
+app.use("/api/visitor-types", visitorTypeRoutes);
 
 // Protected routes - require authentication
 const protectedRoutes = [
@@ -168,6 +170,7 @@ const protectedRoutes = [
   "/api/sms",
   "/api/permissions",
   "/api/organizations",
+  "/api/visitor-types",
 ];
 
 protectedRoutes.forEach((route) => {

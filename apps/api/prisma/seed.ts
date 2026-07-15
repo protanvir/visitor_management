@@ -34,6 +34,91 @@ async function main() {
   });
   console.log("✅ Created organization:", organization.name);
 
+  // Create Visitor Types
+  const visitorTypes = await Promise.all([
+    prisma.visitorType.create({
+      data: {
+        organizationId: organization.id,
+        name: "Buyer",
+        description: "Potential customers or buyers interested in products/services",
+        color: "#3B82F6",
+        active: true,
+        sortOrder: 1,
+      },
+    }),
+    prisma.visitorType.create({
+      data: {
+        organizationId: organization.id,
+        name: "Supplier",
+        description: "Vendors or suppliers providing materials or services",
+        color: "#10B981",
+        active: true,
+        sortOrder: 2,
+      },
+    }),
+    prisma.visitorType.create({
+      data: {
+        organizationId: organization.id,
+        name: "Auditor",
+        description: "External auditors for compliance or quality checks",
+        color: "#F59E0B",
+        active: true,
+        sortOrder: 3,
+      },
+    }),
+    prisma.visitorType.create({
+      data: {
+        organizationId: organization.id,
+        name: "Bank",
+        description: "Bank representatives for financial meetings",
+        color: "#8B5CF6",
+        active: true,
+        sortOrder: 4,
+      },
+    }),
+    prisma.visitorType.create({
+      data: {
+        organizationId: organization.id,
+        name: "Guest",
+        description: "General visitors for meetings or tours",
+        color: "#6B7280",
+        active: true,
+        sortOrder: 5,
+      },
+    }),
+    prisma.visitorType.create({
+      data: {
+        organizationId: organization.id,
+        name: "Contractor",
+        description: "External contractors for maintenance or projects",
+        color: "#EF4444",
+        active: true,
+        sortOrder: 6,
+      },
+    }),
+    prisma.visitorType.create({
+      data: {
+        organizationId: organization.id,
+        name: "Delivery",
+        description: "Delivery personnel for packages or materials",
+        color: "#06B6D4",
+        active: true,
+        sortOrder: 7,
+      },
+    }),
+    prisma.visitorType.create({
+      data: {
+        organizationId: organization.id,
+        name: "Interview",
+        description: "Job candidates for interviews",
+        color: "#EC4899",
+        active: true,
+        sortOrder: 8,
+      },
+    }),
+  ]);
+  console.log("✅ Created", visitorTypes.length, "visitor types");
+
   // Create Sites
   const mainOffice = await prisma.site.create({
     data: {
