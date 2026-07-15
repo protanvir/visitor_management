@@ -12,16 +12,18 @@ datasource db {
 
 // Organization model
 model Organization {
-  id           String         @id @default(uuid())
-  name         String
-  settings     Json?
-  sites        Site[]
-  employees    Employee[]
-  users        User[]
-  watchlists   Watchlist[]
-  visitorTypes VisitorType[]
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  id               String               @id @default(uuid())
+  name             String
+  settings         Json?
+  sites            Site[]
+  employees        Employee[]
+  users            User[]
+  watchlists       Watchlist[]
+  visitorTypes     VisitorType[]
+  emergencyContacts   EmergencyContact[]
+  emergencyProcedures EmergencyProcedure[]
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
 }
 
 // User model (for authentication)
@@ -189,6 +191,40 @@ model SafetyChecklist {
   updatedAt DateTime @updatedAt
 }
 
+// Emergency Contact model
+model EmergencyContact {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  name           String
+  role           String
+  phone          String
+  email          String?
+  available24x7  Boolean      @default(false)
+  sortOrder      Int          @default(0)
+  active         Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId])
+}
+
+// Emergency Procedure model
+model EmergencyProcedure {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  title          String
+  type           String       // fire, medical, security, natural_disaster, other
+  steps          Json         // Array of step strings
+  sortOrder      Int          @default(0)
+  active         Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId])
+}
+
 // Visitor Type model (customizable visitor categories)
 model VisitorType {
   id             String       @id @default(uuid())
@@ -204,4 +240,25 @@ model VisitorType {
 
   @@unique([organizationId, name])
   @@index([organizationId])
+}
+
+// Audit Log model (persistent audit trail)
+model AuditLog {
+  id         String   @id @default(uuid())
+  action     String   // e.g. visit.checked_in, badge.created
+  entityType String   // e.g. visit, badge, visitor
+  entityId   String
+  userId     String?
+  userName   String?
+  details    Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  @@index([action])
+  @@index([entityType])
+  @@index([entityId])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([action, createdAt])
+  @@index([entityType, createdAt])
 }

@@ -27,7 +27,7 @@ export default function VisitorTypesPage() {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:3001/api/visitor-types", {
+      const res = await fetch("/api/visitor-types", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const result = await res.json();
@@ -43,8 +43,8 @@ export default function VisitorTypesPage() {
     try {
       const token = localStorage.getItem("token");
       const url = editingType
-        ? `http://localhost:3001/api/visitor-types/${editingType.id}`
-        : "http://localhost:3001/api/visitor-types";
+        ? `/api/visitor-types/${editingType.id}`
+        : "/api/visitor-types";
       const method = editingType ? "PUT" : "POST";
 
       const res = await fetch(url, {
@@ -81,7 +81,7 @@ export default function VisitorTypesPage() {
     if (!confirm("Delete this visitor type?")) return;
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:3001/api/visitor-types/${id}`, {
+      const res = await fetch(`/api/visitor-types/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -94,7 +94,7 @@ export default function VisitorTypesPage() {
   const handleToggle = async (id: string) => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:3001/api/visitor-types/${id}/toggle`, {
+      const res = await fetch(`/api/visitor-types/${id}/toggle`, {
         method: "PATCH",
         headers: { Authorization: `Bearer ${token}` },
       });

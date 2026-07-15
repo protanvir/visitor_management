@@ -66,7 +66,7 @@ export default function BadgeDisplay({ visitId, onExpire }: BadgeDisplayProps) {
 
   const fetchBadge = async () => {
     try {
-      const response = await fetch(`http://localhost:3001/api/visits/${visitId}`);
+      const response = await fetch(`/api/visits/${visitId}`);
       const result = await response.json();
 
       if (result.success && result.data.badge) {

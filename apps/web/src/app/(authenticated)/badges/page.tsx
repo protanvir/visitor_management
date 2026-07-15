@@ -28,7 +28,7 @@ export default function BadgesPage() {
       const token = localStorage.getItem("token");
       const params = new URLSearchParams();
       if (filter !== "all") params.append("status", filter);
-      const response = await fetch(`http://localhost:3001/api/badges?${params}`, { headers: { Authorization: `Bearer ${token}` } });
+      const response = await fetch(`/api/badges?${params}`, { headers: { Authorization: `Bearer ${token}` } });
       const result = await response.json();
       if (result.success) { setBadges(result.data.badges); setStats(result.data.stats); }
       else setError(result.error || "Failed to fetch badges");

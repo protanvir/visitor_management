@@ -3,64 +3,43 @@ import { prisma } from "../index";
 
 const router = Router();
 
-// Audit log types
-type AuditAction = 
-  | "visitor.created"
-  | "visitor.updated"
-  | "visitor.deleted"
-  | "visit.created"
-  | "visit.checked_in"
-  | "visit.checked_out"
-  | "visit.approved"
-  | "visit.rejected"
-  | "badge.created"
-  | "badge.returned"
-  | "nda.signed"
-  | "safety.completed"
-  | "area.access_granted"
-  | "area.access_denied"
-  | "emergency.alert_sent"
-  | "notification.sent";
-
-interface AuditLog {
-  id: string;
-  action: AuditAction;
+// Helper to create audit log (exported for use in other routes)
+export async function createAuditLog(data: {
+  action: string;
   entityType: string;
   entityId: string;
   userId?: string;
-  user_name?: string;
+  userName?: string;
   details?: any;
   ipAddress?: string;
-  createdAt: Date;
-}
+}) {
+  try {
+    const log = await prisma.auditLog.create({
+      data: {
+        action: data.action,
+        entityType: data.entityType,
+        entityId: data.entityId,
+        userId: data.userId || null,
+        userName: data.userName || null,
+        details: data.details || null,
+        ipAddress: data.ipAddress || null,
+      },
+    });
 
-// In-memory audit log (in production, use database table)
-const auditLogs: AuditLog[] = [];
-
-// Helper to create audit log
-export function createAuditLog(data: Omit<AuditLog, "id" | "createdAt">) {
-  const log: AuditLog = {
-    id: `audit-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    ...data,
-    createdAt: new Date(),
-  };
-  auditLogs.unshift(log); // Add to beginning (newest first)
-  
-  // Keep only last 10000 logs in memory
-  if (auditLogs.length > 10000) {
-    auditLogs.pop();
+    console.log(`[Audit] ${data.action} on ${data.entityType}:${data.entityId}`);
+    return log;
+  } catch (error) {
+    console.error("[Audit] Failed to create audit log:", error);
+    return null;
   }
-  
-  console.log(`[Audit] ${data.action} on ${data.entityType}:${data.entityId}`);
-  return log;
 }
 
-// Get all audit logs
+// Get all audit logs with pagination and filters
 router.get("/", async (req: Request, res: Response) => {
   try {
     const {
       page = "1",
-      pageSize = "50",
+      pageSize = "20",
       action,
       entityType,
       entityId,
@@ -72,35 +51,31 @@ router.get("/", async (req: Request, res: Response) => {
     const size = parseInt(pageSize as string);
     const skip = (pageNum - 1) * size;
 
-    let filteredLogs = [...auditLogs];
-
-    // Apply filters
-    if (action) {
-      filteredLogs = filteredLogs.filter((log) => log.action === action);
-    }
-    if (entityType) {
-      filteredLogs = filteredLogs.filter((log) => log.entityType === entityType);
-    }
-    if (entityId) {
-      filteredLogs = filteredLogs.filter((log) => log.entityId === entityId);
-    }
-    if (startDate) {
-      const start = new Date(startDate as string);
-      filteredLogs = filteredLogs.filter((log) => log.createdAt >= start);
-    }
-    if (endDate) {
-      const end = new Date(endDate as string);
-      filteredLogs = filteredLogs.filter((log) => log.createdAt <= end);
+    // Build filter
+    const where: any = {};
+    if (action) where.action = action;
+    if (entityType) where.entityType = entityType;
+    if (entityId) where.entityId = entityId;
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) where.createdAt.gte = new Date(startDate as string);
+      if (endDate) where.createdAt.lte = new Date(endDate as string);
     }
 
-    // Paginate
-    const total = filteredLogs.length;
-    const paginatedLogs = filteredLogs.slice(skip, skip + size);
+    const [logs, total] = await Promise.all([
+      prisma.auditLog.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: size,
+      }),
+      prisma.auditLog.count({ where }),
+    ]);
 
     res.json({
       success: true,
       data: {
-        data: paginatedLogs,
+        data: logs,
         total,
         page: pageNum,
         pageSize: size,
@@ -117,7 +92,7 @@ router.get("/", async (req: Request, res: Response) => {
 router.get("/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const log = auditLogs.find((l) => l.id === id);
+    const log = await prisma.auditLog.findUnique({ where: { id } });
 
     if (!log) {
       return res.status(404).json({ success: false, error: "Audit log not found" });
@@ -135,42 +110,39 @@ router.get("/stats/summary", async (req: Request, res: Response) => {
   try {
     const { startDate, endDate } = req.query;
 
-    let filteredLogs = [...auditLogs];
-
-    if (startDate) {
-      const start = new Date(startDate as string);
-      filteredLogs = filteredLogs.filter((log) => log.createdAt >= start);
-    }
-    if (endDate) {
-      const end = new Date(endDate as string);
-      filteredLogs = filteredLogs.filter((log) => log.createdAt <= end);
+    const where: any = {};
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) where.createdAt.gte = new Date(startDate as string);
+      if (endDate) where.createdAt.lte = new Date(endDate as string);
     }
 
-    // Group by action
-    const actionCounts = filteredLogs.reduce((acc, log) => {
-      acc[log.action] = (acc[log.action] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    const totalLogs = await prisma.auditLog.count({ where });
 
-    // Group by entity type
-    const entityCounts = filteredLogs.reduce((acc, log) => {
-      acc[log.entityType] = (acc[log.entityType] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    // Get action counts
+    const actionGroups = await prisma.auditLog.groupBy({
+      by: ["action"],
+      where,
+      _count: { action: true },
+    });
+    const actionCounts: Record<string, number> = {};
+    actionGroups.forEach((g) => { actionCounts[g.action] = g._count.action; });
 
-    // Activity by hour
-    const activityByHour = Array.from({ length: 24 }, (_, i) => ({
-      hour: i,
-      count: filteredLogs.filter((log) => log.createdAt.getHours() === i).length,
-    }));
+    // Get entity type counts
+    const entityGroups = await prisma.auditLog.groupBy({
+      by: ["entityType"],
+      where,
+      _count: { entityType: true },
+    });
+    const entityCounts: Record<string, number> = {};
+    entityGroups.forEach((g) => { entityCounts[g.entityType] = g._count.entityType; });
 
     res.json({
       success: true,
       data: {
-        totalLogs: filteredLogs.length,
+        totalLogs,
         actionCounts,
         entityCounts,
-        activityByHour,
       },
     });
   } catch (error) {
@@ -191,12 +163,11 @@ router.get("/meta/actions", async (req: Request, res: Response) => {
       { value: "visit.checked_out", label: "Check-Out" },
       { value: "visit.approved", label: "Visit Approved" },
       { value: "visit.rejected", label: "Visit Rejected" },
-      { value: "badge.created", label: "Badge Created" },
+      { value: "badge.generated", label: "Badge Generated" },
+      { value: "badge.emailed", label: "Badge Emailed" },
       { value: "badge.returned", label: "Badge Returned" },
       { value: "nda.signed", label: "NDA Signed" },
       { value: "safety.completed", label: "Safety Briefing Completed" },
-      { value: "area.access_granted", label: "Area Access Granted" },
-      { value: "area.access_denied", label: "Area Access Denied" },
       { value: "emergency.alert_sent", label: "Emergency Alert Sent" },
       { value: "notification.sent", label: "Notification Sent" },
     ];
@@ -213,24 +184,25 @@ router.get("/export/csv", async (req: Request, res: Response) => {
   try {
     const { startDate, endDate } = req.query;
 
-    let filteredLogs = [...auditLogs];
+    const where: any = {};
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) where.createdAt.gte = new Date(startDate as string);
+      if (endDate) where.createdAt.lte = new Date(endDate as string);
+    }
 
-    if (startDate) {
-      const start = new Date(startDate as string);
-      filteredLogs = filteredLogs.filter((log) => log.createdAt >= start);
-    }
-    if (endDate) {
-      const end = new Date(endDate as string);
-      filteredLogs = filteredLogs.filter((log) => log.createdAt <= end);
-    }
+    const logs = await prisma.auditLog.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+    });
 
     const headers = ["ID", "Action", "Entity Type", "Entity ID", "User", "Details", "IP Address", "Timestamp"];
-    const rows = filteredLogs.map((log) => [
+    const rows = logs.map((log) => [
       log.id,
       log.action,
       log.entityType,
       log.entityId,
-      log.user_name || log.userId || "-",
+      log.userName || log.userId || "-",
       JSON.stringify(log.details || {}),
       log.ipAddress || "-",
       log.createdAt.toISOString(),

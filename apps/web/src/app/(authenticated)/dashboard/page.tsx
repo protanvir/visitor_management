@@ -22,7 +22,7 @@ export default function DashboardPage() {
   const fetchDashboardData = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:3001/api/reports/dashboard", { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch("/api/reports/dashboard", { headers: { Authorization: `Bearer ${token}` } });
       const result = await res.json();
       if (result.success) setData(result.data); else setError(result.error);
     } catch (err) { setError("Failed to connect"); }

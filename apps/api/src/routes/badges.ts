@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { prisma } from "../index";
 import { z } from "zod";
+import { createAuditLog } from "./audit";
 
 const router = Router();
 
@@ -69,6 +70,7 @@ router.get("/", async (req: Request, res: Response) => {
 });
 
 // Lookup badge by QR code (used by kiosk for pre-registered visitors)
+// QR codes encode the visit ID, so we search by visitId
 router.get("/lookup", async (req: Request, res: Response) => {
   try {
     const { qrCode } = req.query;
@@ -77,8 +79,9 @@ router.get("/lookup", async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: "qrCode query parameter is required" });
     }
 
+    // QR code contains the visit ID, so look up badge by visitId
     const badge = await prisma.badge.findFirst({
-      where: { qrCode: qrCode as string },
+      where: { visitId: qrCode as string },
       include: {
         visit: {
           include: {
@@ -164,6 +167,14 @@ router.post("/return", async (req: Request, res: Response) => {
         returnedBy: validatedData.returnedBy,
         returnNotes: validatedData.notes,
       },
+    });
+
+    createAuditLog({
+      action: "badge.returned",
+      entityType: "badge",
+      entityId: badge.id,
+      userName: validatedData.returnedBy,
+      details: { visitId: validatedData.visitId, notes: validatedData.notes },
     });
 
     res.json({

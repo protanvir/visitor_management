@@ -17,9 +17,9 @@ export default function ReportsPage() {
       const token = localStorage.getItem("token");
       const headers = { Authorization: `Bearer ${token}` };
       const [sitesRes, dashRes, visitsRes] = await Promise.all([
-        fetch("http://localhost:3001/api/sites", { headers }),
-        fetch("http://localhost:3001/api/reports/dashboard", { headers }),
-        fetch("http://localhost:3001/api/visits?pageSize=100", { headers }),
+        fetch("/api/sites", { headers }),
+        fetch("/api/reports/dashboard", { headers }),
+        fetch("/api/visits?pageSize=100", { headers }),
       ]);
       const sitesResult = await sitesRes.json();
       const dashResult = await dashRes.json();
@@ -51,7 +51,7 @@ export default function ReportsPage() {
   const exportCSV = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:3001/api/reports/export/csv", { headers: { Authorization: `Bearer ${token}` } });
+      const response = await fetch("/api/reports/export/csv", { headers: { Authorization: `Bearer ${token}` } });
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");

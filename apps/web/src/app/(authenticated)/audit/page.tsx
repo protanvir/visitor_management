@@ -24,7 +24,7 @@ export default function AuditPage() {
       const params = new URLSearchParams({ page: page.toString(), pageSize: "20" });
       if (actionFilter) params.append("action", actionFilter);
       if (entityFilter) params.append("entityType", entityFilter);
-      const res = await fetch(`http://localhost:3001/api/audit?${params}`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch(`/api/audit?${params}`, { headers: { Authorization: `Bearer ${token}` } });
       const result = await res.json();
       if (result.success) { setLogs(result.data.data); setTotalPages(result.data.totalPages); }
       else setError(result.error);
@@ -35,7 +35,7 @@ export default function AuditPage() {
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:3001/api/audit/stats/summary", { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch("/api/audit/stats/summary", { headers: { Authorization: `Bearer ${token}` } });
       const result = await res.json();
       if (result.success) setStats(result.data);
     } catch (err) { console.error(err); }
@@ -44,7 +44,7 @@ export default function AuditPage() {
   const exportCSV = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:3001/api/audit/export/csv", { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch("/api/audit/export/csv", { headers: { Authorization: `Bearer ${token}` } });
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a"); a.href = url;

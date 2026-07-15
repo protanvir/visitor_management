@@ -42,7 +42,7 @@ export default function VisitorsPage() {
       const token = localStorage.getItem("token");
       const params = new URLSearchParams({ page: page.toString(), pageSize: "10", include: "visits" });
       if (search) params.append("search", search);
-      const res = await fetch(`http://localhost:3001/api/visitors?${params}`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch(`/api/visitors?${params}`, { headers: { Authorization: `Bearer ${token}` } });
       const result = await res.json();
       if (result.success) setVisitors(result.data); else setError(result.error);
     } catch (err) { setError("Failed to connect"); }
@@ -53,7 +53,7 @@ export default function VisitorsPage() {
     if (!confirm("Delete this visitor?")) return;
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:3001/api/visitors/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch(`/api/visitors/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
       const result = await res.json();
       if (result.success) fetchVisitors(); else alert(result.error);
     } catch (err) { alert("Failed to delete"); }
@@ -63,7 +63,7 @@ export default function VisitorsPage() {
     setChecking(visitId);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:3001/api/visits/${visitId}/checkout`, {
+      const res = await fetch(`/api/visits/${visitId}/checkout`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });

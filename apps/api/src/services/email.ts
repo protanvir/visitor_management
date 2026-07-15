@@ -589,4 +589,79 @@ ${visitorList.map((v) => `- ${v.name} (Check-in: ${v.checkInTime})`).join("\n")}
 
 © ${new Date().getFullYear()} Aptech Group`,
   }),
+
+  // Badge shared with visitor
+  badgeShared: (
+    visitorName: string,
+    hostName: string,
+    siteName: string,
+    purpose: string,
+    expectedArrival: string,
+    badgeUrl: string
+  ) => ({
+    subject: `Your Visitor Badge for ${siteName} — ${visitorName}`,
+    html: baseTemplate(`
+      <h2 class="content-title">Your Visitor Badge</h2>
+      <p class="content-text">
+        Dear ${visitorName},
+      </p>
+      <p class="content-text">
+        You have been pre-registered as a visitor at <strong>Aptech Group</strong>.
+        Please find your visitor badge below. Present the QR code at the entrance when you arrive.
+      </p>
+
+      <div class="info-box">
+        <div class="info-grid">
+          <div>
+            <p class="info-label">Host</p>
+            <p class="info-value">${hostName}</p>
+          </div>
+          <div>
+            <p class="info-label">Location</p>
+            <p class="info-value">${siteName}</p>
+          </div>
+          <div>
+            <p class="info-label">Purpose</p>
+            <p class="info-value">${purpose}</p>
+          </div>
+          <div>
+            <p class="info-label">Expected Arrival</p>
+            <p class="info-value">${expectedArrival}</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="${badgeUrl}" class="btn btn-success" style="font-size: 16px; padding: 14px 32px;">
+          View Your Badge
+        </a>
+      </div>
+
+      <div class="highlight">
+        <p style="margin: 0; font-size: 14px; color: #92400e;">
+          <strong>Important:</strong> This badge is valid for 12 hours from the time you check in.
+          Please present the QR code at the reception entrance.
+        </p>
+      </div>
+
+      <p class="content-text" style="font-size: 14px; color: #6b7280;">
+        If you have any questions, please contact your host ${hostName} or visit the reception desk.
+      </p>
+    `),
+    text: `Dear ${visitorName},
+
+Your Visitor Badge for Aptech Group
+
+Host: ${hostName}
+Location: ${siteName}
+Purpose: ${purpose}
+Expected Arrival: ${expectedArrival}
+
+View your badge: ${badgeUrl}
+
+Important: This badge is valid for 12 hours from the time you check in.
+Please present the QR code at the reception entrance.
+
+© ${new Date().getFullYear()} Aptech Group`,
+  }),
 };

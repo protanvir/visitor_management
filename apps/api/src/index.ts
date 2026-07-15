@@ -39,6 +39,9 @@ dotenv.config();
 const app = express();
 const PORT = process.env.API_PORT || 3001;
 
+// Trust proxy for rate limiting behind reverse proxy
+app.set("trust proxy", 1);
+
 // Initialize Prisma
 export const prisma = new PrismaClient();
 

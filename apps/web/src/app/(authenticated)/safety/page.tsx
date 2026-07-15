@@ -19,7 +19,7 @@ export default function SafetyPage() {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:3001/api/safety/visit/${visitId}`, { headers: { Authorization: `Bearer ${token}` } });
+      const response = await fetch(`/api/safety/visit/${visitId}`, { headers: { Authorization: `Bearer ${token}` } });
       const result = await response.json();
       if (result.success) setChecklist(result.data);
       else setError("Failed to load safety checklist");
@@ -30,7 +30,7 @@ export default function SafetyPage() {
   const handleItemToggle = async (itemId: string, completed: boolean) => {
     if (!checklist) return;
     const token = localStorage.getItem("token");
-    const response = await fetch(`http://localhost:3001/api/safety/visit/${visitId}/item/${itemId}`, {
+    const response = await fetch(`/api/safety/visit/${visitId}/item/${itemId}`, {
       method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({ completed }),
     });
@@ -41,7 +41,7 @@ export default function SafetyPage() {
   const handleCompleteChecklist = async () => {
     setLoading(true);
     const token = localStorage.getItem("token");
-    const response = await fetch(`http://localhost:3001/api/safety/visit/${visitId}/complete`, {
+    const response = await fetch(`/api/safety/visit/${visitId}/complete`, {
       method: "POST", headers: { Authorization: `Bearer ${token}` },
     });
     const result = await response.json();

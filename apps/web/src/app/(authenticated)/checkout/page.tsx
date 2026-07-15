@@ -30,7 +30,7 @@ export default function CheckoutPage() {
     setSuccess(false);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:3001/api/visits/${visitId.trim()}`, {
+      const res = await fetch(`/api/visits/${visitId.trim()}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const result = await res.json();
@@ -56,7 +56,7 @@ export default function CheckoutPage() {
     setError("");
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:3001/api/visits/${visit.id}/checkout`, {
+      const res = await fetch(`/api/visits/${visit.id}/checkout`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });

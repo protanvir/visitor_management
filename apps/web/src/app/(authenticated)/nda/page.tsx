@@ -18,7 +18,7 @@ export default function NdaPage() {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:3001/api/nda/visit/${visitId}/sign`, {
+      const response = await fetch(`/api/nda/visit/${visitId}/sign`, {
         method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ visitorName, visitorEmail, signature }),
       });

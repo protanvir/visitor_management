@@ -28,8 +28,8 @@ export default function HostPage() {
       const token = localStorage.getItem("token");
       const headers = { Authorization: `Bearer ${token}` };
       const [currentRes, pendingRes] = await Promise.all([
-        fetch(`http://localhost:3001/api/employees/${hostId}/current-visitors`, { headers }),
-        fetch(`http://localhost:3001/api/employees/${hostId}/pending-approvals`, { headers }),
+        fetch(`/api/employees/${hostId}/current-visitors`, { headers }),
+        fetch(`/api/employees/${hostId}/pending-approvals`, { headers }),
       ]);
       const currentResult = await currentRes.json();
       const pendingResult = await pendingRes.json();
@@ -41,7 +41,7 @@ export default function HostPage() {
 
   const handleApprove = async (visitId: string) => {
     const token = localStorage.getItem("token");
-    const res = await fetch(`http://localhost:3001/api/visits/${visitId}/approve`, { method: "POST", headers: { Authorization: `Bearer ${token}` } });
+    const res = await fetch(`/api/visits/${visitId}/approve`, { method: "POST", headers: { Authorization: `Bearer ${token}` } });
     const result = await res.json();
     if (result.success) fetchData(); else alert(result.error);
   };
@@ -49,7 +49,7 @@ export default function HostPage() {
   const handleReject = async (visitId: string) => {
     const reason = prompt("Reason for rejection:");
     const token = localStorage.getItem("token");
-    const res = await fetch(`http://localhost:3001/api/visits/${visitId}/reject`, {
+    const res = await fetch(`/api/visits/${visitId}/reject`, {
       method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({ reason }),
     });
@@ -60,7 +60,7 @@ export default function HostPage() {
   const handleCheckout = async (visitId: string) => {
     if (!confirm("Check out this visitor?")) return;
     const token = localStorage.getItem("token");
-    const res = await fetch(`http://localhost:3001/api/visits/${visitId}/checkout`, { method: "POST", headers: { Authorization: `Bearer ${token}` } });
+    const res = await fetch(`/api/visits/${visitId}/checkout`, { method: "POST", headers: { Authorization: `Bearer ${token}` } });
     const result = await res.json();
     if (result.success) fetchData(); else alert(result.error);
   };

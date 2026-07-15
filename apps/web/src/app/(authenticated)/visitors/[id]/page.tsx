@@ -20,7 +20,7 @@ export default function VisitorDetailPage() {
   const fetchVisitor = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:3001/api/visitors/${visitorId}`, { headers: { Authorization: `Bearer ${token}` } });
+      const response = await fetch(`/api/visitors/${visitorId}`, { headers: { Authorization: `Bearer ${token}` } });
       const result = await response.json();
       if (result.success) setVisitor(result.data);
       else setError(result.error || "Failed to fetch visitor");

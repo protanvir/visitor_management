@@ -28,7 +28,7 @@ export default function CurrentVisitorsPage() {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:3001/api/visits?status=checked_in&pageSize=100", {
+      const res = await fetch("/api/visits?status=checked_in&pageSize=100", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const result = await res.json();
@@ -48,7 +48,7 @@ export default function CurrentVisitorsPage() {
     setChecking(visitId);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:3001/api/visits/${visitId}/checkout`, {
+      const res = await fetch(`/api/visits/${visitId}/checkout`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });

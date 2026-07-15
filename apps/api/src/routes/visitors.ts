@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { prisma } from "../index";
 import { z } from "zod";
+import { createAuditLog } from "./audit";
 
 const router = Router();
 
@@ -187,6 +188,13 @@ router.post("/", async (req: Request, res: Response) => {
       },
     });
 
+    createAuditLog({
+      action: "visitor.created",
+      entityType: "visitor",
+      entityId: visitor.id,
+      details: { name: visitor.name, email: visitor.email, company: visitor.company },
+    });
+
     res.status(201).json({
       success: true,
       data: visitor,
@@ -214,6 +222,13 @@ router.put("/:id", async (req: Request, res: Response) => {
     const visitor = await prisma.visitor.update({
       where: { id },
       data: validatedData,
+    });
+
+    createAuditLog({
+      action: "visitor.updated",
+      entityType: "visitor",
+      entityId: visitor.id,
+      details: { name: visitor.name, changes: validatedData },
     });
 
     res.json({
@@ -254,7 +269,15 @@ router.delete("/:id", async (req: Request, res: Response) => {
       });
     }
 
+    const visitor = await prisma.visitor.findUnique({ where: { id } });
     await prisma.visitor.delete({ where: { id } });
+
+    createAuditLog({
+      action: "visitor.deleted",
+      entityType: "visitor",
+      entityId: id,
+      details: { name: visitor?.name, email: visitor?.email },
+    });
 
     res.json({ success: true, message: "Visitor deleted successfully" });
   } catch (error) {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import QRScanner from "@/components/qr/QRScanner";
 
 type Step = "welcome" | "phone" | "details" | "visitor-type" | "host" | "confirm" | "badge";
 interface Employee { id: string; name: string; email: string; designation?: string; department?: string; phone?: string; siteId?: string; }
@@ -20,6 +21,7 @@ export default function KioskPage() {
   const [hostSearch, setHostSearch] = useState("");
   const [qrCode, setQrCode] = useState("");
   const [qrLoading, setQrLoading] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
   const [phoneLookup, setPhoneLookup] = useState(false);
   const [badgeData, setBadgeData] = useState<BadgeData | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
@@ -28,8 +30,8 @@ export default function KioskPage() {
     (async () => {
       try {
         const [e, s] = await Promise.all([
-          fetch("http://localhost:3001/api/employees/public"),
-          fetch("http://localhost:3001/api/sites/public"),
+          fetch("/api/employees/public"),
+          fetch("/api/sites/public"),
         ]);
         const ed = await e.json(), sd = await s.json();
         if (ed.success) setEmployees(ed.data || []);
@@ -49,7 +51,7 @@ export default function KioskPage() {
       try {
         // Find organizationId from site - for now use a default
         // In production, you'd get this from the site data
-        const res = await fetch(`http://localhost:3001/api/visitor-types?active=true`);
+        const res = await fetch(`/api/visitor-types?active=true`);
         const result = await res.json();
         if (result.success) {
           setVisitorTypes(result.data || []);
@@ -74,7 +76,7 @@ export default function KioskPage() {
     setPhoneLookup(true); setError("");
     try {
       const normalizedPhone = data.phone.replace(/\D/g, "");
-      const res = await fetch(`http://localhost:3001/api/visitors/lookup/phone/${normalizedPhone}`);
+      const res = await fetch(`/api/visitors/lookup/phone/${normalizedPhone}`);
       const result = await res.json();
       if (result.success && result.data) {
         const visitor = result.data;
@@ -98,10 +100,15 @@ export default function KioskPage() {
   // QR code lookup
   const lookupQR = async () => {
     if (!qrCode.trim()) return;
+    lookupQRWithCode(qrCode.trim());
+  };
+
+  const lookupQRWithCode = async (code: string) => {
+    if (!code) return;
     setQrLoading(true); setError("");
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:3001/api/badges/lookup?qrCode=${encodeURIComponent(qrCode.trim())}`, {
+      const res = await fetch(`/api/badges/lookup?qrCode=${encodeURIComponent(code)}`, {
         headers: { Authorization: `Bearer ${token || ""}` },
       });
       const result = await res.json();
@@ -139,7 +146,7 @@ export default function KioskPage() {
 
       // Create visitor if new
       if (!visitorId) {
-        const vr = await fetch("http://localhost:3001/api/visitors", {
+        const vr = await fetch("/api/visitors", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -155,7 +162,7 @@ export default function KioskPage() {
       }
 
       // Check in
-      const tr = await fetch("http://localhost:3001/api/visits/checkin", {
+      const tr = await fetch("/api/visits/checkin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -318,16 +325,39 @@ export default function KioskPage() {
               {/* QR Code Option */}
               <div className="mb-4 p-4 bg-bg-page rounded-lg">
                 <p className="text-sm text-muted mb-3">Have a pre-registered QR code?</p>
+
+                {!showScanner ? (
+                  <button onClick={() => setShowScanner(true)} className="btn btn-primary w-full mb-3">
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                    </svg>
+                    Scan QR Code
+                  </button>
+                ) : (
+                  <div className="mb-3">
+                    <QRScanner
+                      isActive={showScanner}
+                      onScan={(data) => {
+                        setQrCode(data);
+                        setShowScanner(false);
+                        // Auto-lookup after scan
+                        setTimeout(() => lookupQRWithCode(data), 100);
+                      }}
+                      onError={(err) => setError(err)}
+                    />
+                    <button onClick={() => setShowScanner(false)} className="btn btn-ghost btn-sm mt-2 w-full">
+                      Close Scanner
+                    </button>
+                  </div>
+                )}
+
+                <p className="text-xs text-muted mb-2">Or enter code manually:</p>
                 <div className="flex gap-2">
                   <input type="text" value={qrCode} onChange={(e) => setQrCode(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && lookupQR()}
-                    className="input flex-1" placeholder="Scan or enter QR code" />
+                    className="input flex-1" placeholder="Enter QR code" />
                   <button onClick={lookupQR} disabled={qrLoading || !qrCode.trim()} className="btn btn-primary">
-                    {qrLoading ? <span className="loading"></span> : (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                      </svg>
-                    )}
+                    {qrLoading ? <span className="loading"></span> : "Go"}
                   </button>
                 </div>
               </div>

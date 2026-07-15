@@ -3,6 +3,7 @@ import { prisma } from "../index";
 import { z } from "zod";
 import QRCode from "qrcode";
 import { notificationService } from "../services/notification";
+import { createAuditLog } from "./audit";
 
 const router = Router();
 
@@ -169,6 +170,14 @@ router.post("/", async (req: Request, res: Response) => {
       },
     });
 
+    createAuditLog({
+      action: "visit.created",
+      entityType: "visit",
+      entityId: visit.id,
+      userName: host.name,
+      details: { visitorName: visitor.name, siteName: site.name, purpose: visit.purpose },
+    });
+
     res.status(201).json({
       success: true,
       data: visit,
@@ -187,6 +196,166 @@ router.post("/", async (req: Request, res: Response) => {
   }
 });
 
+// Generate badge for a pre-registered visit
+router.post("/:id/generate-badge", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const visit = await prisma.visit.findUnique({
+      where: { id },
+      include: { badge: true, visitor: true, host: true, site: true },
+    });
+
+    if (!visit) {
+      return res.status(404).json({ success: false, error: "Visit not found" });
+    }
+
+    if (visit.status !== "pending" && visit.status !== "approved") {
+      return res.status(400).json({
+        success: false,
+        error: `Cannot generate badge for visit with status: ${visit.status}`,
+      });
+    }
+
+    if (visit.badge) {
+      return res.status(400).json({
+        success: false,
+        error: "Badge already exists for this visit",
+      });
+    }
+
+    // Generate QR code encoding the visit ID
+    const qrCodeData = await QRCode.toDataURL(visit.id, {
+      width: 300,
+      margin: 2,
+      color: { dark: "#000000", light: "#ffffff" },
+    });
+
+    // Badge valid for 12 hours from now
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 12);
+
+    const badge = await prisma.badge.create({
+      data: {
+        visitId: visit.id,
+        qrCode: qrCodeData,
+        expiresAt,
+      },
+    });
+
+    createAuditLog({
+      action: "badge.generated",
+      entityType: "badge",
+      entityId: badge.id,
+      userName: visit.host.name,
+      details: { visitorName: visit.visitor.name, siteName: visit.site.name, expiresAt },
+    });
+
+    res.status(201).json({
+      success: true,
+      data: {
+        ...visit,
+        badge,
+      },
+      message: "Badge generated successfully",
+    });
+  } catch (error) {
+    console.error("Error generating badge:", error);
+    res.status(500).json({ success: false, error: "Failed to generate badge" });
+  }
+});
+
+// Send badge email to visitor
+const sendBadgeEmailSchema = z.object({
+  visitorEmail: z.string().email("Invalid email address"),
+});
+
+router.post("/:id/send-badge-email", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const validatedData = sendBadgeEmailSchema.parse(req.body);
+
+    const visit = await prisma.visit.findUnique({
+      where: { id },
+      include: { badge: true, visitor: true, host: true, site: true },
+    });
+
+    if (!visit) {
+      return res.status(404).json({ success: false, error: "Visit not found" });
+    }
+
+    if (!visit.badge) {
+      return res.status(400).json({
+        success: false,
+        error: "No badge generated for this visit. Generate a badge first.",
+      });
+    }
+
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+    const badgeUrl = `${frontendUrl}/badge?visitId=${visit.id}`;
+
+    const expectedArrival = visit.expectedArrival
+      ? new Date(visit.expectedArrival).toLocaleString()
+      : "Not specified";
+
+    // Send email via notification service
+    const { sendEmail } = await import("../services/email");
+    const { emailTemplates } = await import("../services/email");
+
+    const template = emailTemplates.badgeShared(
+      visit.visitor.name,
+      visit.host.name,
+      visit.site.name,
+      visit.purpose || "Not specified",
+      expectedArrival,
+      badgeUrl
+    );
+
+    await sendEmail({
+      to: validatedData.visitorEmail,
+      subject: template.subject,
+      html: template.html,
+      text: template.text,
+    });
+
+    // Record notification
+    await prisma.notification.create({
+      data: {
+        visitId: visit.id,
+        type: "email",
+        recipient: validatedData.visitorEmail,
+        subject: template.subject,
+        message: template.text,
+        status: "sent",
+        sentAt: new Date(),
+      },
+    });
+
+    createAuditLog({
+      action: "badge.emailed",
+      entityType: "badge",
+      entityId: visit.badge.id,
+      userName: visit.host.name,
+      details: { visitorName: visit.visitor.name, email: validatedData.visitorEmail },
+    });
+
+    res.json({
+      success: true,
+      message: "Badge email sent successfully",
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        success: false,
+        error: "Validation error",
+        details: error.errors,
+      });
+    }
+    console.error("Error sending badge email:", error);
+    res.status(500).json({ success: false, error: "Failed to send badge email" });
+  }
+});
+
 // Check in visitor
 router.post("/checkin", async (req: Request, res: Response) => {
   try {
@@ -196,7 +365,7 @@ router.post("/checkin", async (req: Request, res: Response) => {
 
     // If QR code provided, find visit by QR code
     if (validatedData.qrCode) {
-      const badge = await prisma.badge.findUnique({
+      const badge = await prisma.badge.findFirst({
         where: { qrCode: validatedData.qrCode },
         include: { visit: true },
       });
@@ -321,6 +490,14 @@ router.post("/checkin", async (req: Request, res: Response) => {
       });
     }
 
+    createAuditLog({
+      action: "visit.checked_in",
+      entityType: "visit",
+      entityId: visit.id,
+      userName: visit.host.name,
+      details: { visitorName: visit.visitor.name, siteName: visit.site.name, purpose: visit.purpose },
+    });
+
     res.json({
       success: true,
       data: {
@@ -382,6 +559,13 @@ router.post("/:id/checkout", async (req: Request, res: Response) => {
       },
     });
 
+    createAuditLog({
+      action: "visit.checked_out",
+      entityType: "visit",
+      entityId: visit.id,
+      details: { durationMinutes: duration },
+    });
+
     res.json({
       success: true,
       data: {
@@ -430,6 +614,13 @@ router.post("/:id/approve", async (req: Request, res: Response) => {
       console.error("Failed to send approval notification:", err);
     });
 
+    createAuditLog({
+      action: "visit.approved",
+      entityType: "visit",
+      entityId: visit.id,
+      details: { visitorId: visit.visitorId, hostId: visit.hostId },
+    });
+
     res.json({
       success: true,
       data: updatedVisit,
@@ -473,6 +664,13 @@ router.post("/:id/reject", async (req: Request, res: Response) => {
     // Send rejection notification to visitor
     notificationService.notifyVisitRejection(id, reason).catch((err) => {
       console.error("Failed to send rejection notification:", err);
+    });
+
+    createAuditLog({
+      action: "visit.rejected",
+      entityType: "visit",
+      entityId: visit.id,
+      details: { reason, visitorId: visit.visitorId, hostId: visit.hostId },
     });
 
     res.json({

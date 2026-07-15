@@ -18,7 +18,7 @@ export default function AreasPage() {
   const fetchAreas = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:3001/api/areas", { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch("/api/areas", { headers: { Authorization: `Bearer ${token}` } });
       const result = await res.json();
       if (result.success) setAreas(result.data); else setError(result.error);
     } catch (err) { setError("Failed to connect"); }

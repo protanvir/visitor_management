@@ -31,12 +31,12 @@ export default function EmployeesManagementPage() {
   useEffect(() => { fetchSites(); }, []);
   useEffect(() => { fetchEmployees(); }, [page, search]);
 
-  const fetchSites = async () => { try { const token = localStorage.getItem("token"); const res = await fetch("http://localhost:3001/api/sites", { headers: { Authorization: `Bearer ${token}` } }); const r = await res.json(); if (r.success) setSites(r.data || []); } catch (e) { console.error(e); } };
-  const fetchEmployees = async () => { setLoading(true); try { const token = localStorage.getItem("token"); const params = new URLSearchParams({ page: page.toString(), pageSize: "10" }); if (search) params.append("search", search); const res = await fetch(`http://localhost:3001/api/employees?${params}`, { headers: { Authorization: `Bearer ${token}` } }); const r = await res.json(); if (r.success) setEmployees(r.data); else setError(r.error); } catch (e) { setError("Failed to connect"); } finally { setLoading(false); } };
+  const fetchSites = async () => { try { const token = localStorage.getItem("token"); const res = await fetch("/api/sites", { headers: { Authorization: `Bearer ${token}` } }); const r = await res.json(); if (r.success) setSites(r.data || []); } catch (e) { console.error(e); } };
+  const fetchEmployees = async () => { setLoading(true); try { const token = localStorage.getItem("token"); const params = new URLSearchParams({ page: page.toString(), pageSize: "10" }); if (search) params.append("search", search); const res = await fetch(`/api/employees?${params}`, { headers: { Authorization: `Bearer ${token}` } }); const r = await res.json(); if (r.success) setEmployees(r.data); else setError(r.error); } catch (e) { setError("Failed to connect"); } finally { setLoading(false); } };
   const resetForm = () => setFormData({ name: "", email: "", designation: "", department: "", role: "employee", phone: "", siteId: "" });
-  const handleCreate = async () => { setFormError(""); setFormLoading(true); try { if (!user?.organizationId) { setFormError("No organization"); setFormLoading(false); return; } const token = localStorage.getItem("token"); const res = await fetch("http://localhost:3001/api/employees", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ ...formData, organizationId: user.organizationId }) }); const r = await res.json(); if (r.success) { setShowModal(false); resetForm(); fetchEmployees(); } else setFormError(r.error); } catch (e) { setFormError("Failed to connect"); } finally { setFormLoading(false); } };
-  const handleUpdate = async () => { if (!editing) return; setFormError(""); setFormLoading(true); try { const token = localStorage.getItem("token"); const res = await fetch(`http://localhost:3001/api/employees/${editing.id}`, { method: "PUT", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify(formData) }); const r = await res.json(); if (r.success) { setEditing(null); setShowModal(false); resetForm(); fetchEmployees(); } else setFormError(r.error); } catch (e) { setFormError("Failed to connect"); } finally { setFormLoading(false); } };
-  const handleDelete = async (id: string) => { if (!confirm("Delete?")) return; try { const token = localStorage.getItem("token"); const res = await fetch(`http://localhost:3001/api/employees/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } }); const r = await res.json(); if (r.success) fetchEmployees(); else alert(r.error); } catch (e) { alert("Failed"); } };
+  const handleCreate = async () => { setFormError(""); setFormLoading(true); try { if (!user?.organizationId) { setFormError("No organization"); setFormLoading(false); return; } const token = localStorage.getItem("token"); const res = await fetch("/api/employees", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ ...formData, organizationId: user.organizationId }) }); const r = await res.json(); if (r.success) { setShowModal(false); resetForm(); fetchEmployees(); } else setFormError(r.error); } catch (e) { setFormError("Failed to connect"); } finally { setFormLoading(false); } };
+  const handleUpdate = async () => { if (!editing) return; setFormError(""); setFormLoading(true); try { const token = localStorage.getItem("token"); const res = await fetch(`/api/employees/${editing.id}`, { method: "PUT", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify(formData) }); const r = await res.json(); if (r.success) { setEditing(null); setShowModal(false); resetForm(); fetchEmployees(); } else setFormError(r.error); } catch (e) { setFormError("Failed to connect"); } finally { setFormLoading(false); } };
+  const handleDelete = async (id: string) => { if (!confirm("Delete?")) return; try { const token = localStorage.getItem("token"); const res = await fetch(`/api/employees/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } }); const r = await res.json(); if (r.success) fetchEmployees(); else alert(r.error); } catch (e) { alert("Failed"); } };
 
   const handleImportCSV = async () => {
     if (!importFile || !user?.organizationId) return;
@@ -45,7 +45,7 @@ export default function EmployeesManagementPage() {
     try {
       const csvText = await importFile.text();
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:3001/api/employees/import", {
+      const res = await fetch("/api/employees/import", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({
@@ -139,7 +139,7 @@ export default function EmployeesManagementPage() {
             {/* Template Download */}
             <div className="bg-bg-page p-4 rounded-lg mb-4">
               <p className="text-sm text-muted mb-2">Download the template file with the required column headers:</p>
-              <a href="http://localhost:3001/api/employees/import/template" download className="text-brand hover:underline text-sm font-medium inline-flex items-center gap-1">
+              <a href="/api/employees/import/template" download className="text-brand hover:underline text-sm font-medium inline-flex items-center gap-1">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
